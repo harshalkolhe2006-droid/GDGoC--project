@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>StudyShare</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#3b5bdb;--blue-dark:#2f4ac2;--blue-light:#eef1fc;
+  --green:#2f9e44;--green-light:#d3f9d8;
+  --red:#e03131;--amber:#f08c00;--amber-light:#fff3cd;
+  --bg:#f6f7fb;--card:#fff;--border:#e4e6ef;
+  --text:#1a1a2e;--muted:#6b7280;--sidebar-w:230px;
+  --topbar-bg:#fff;--modal-bg:#fff;--input-bg:#fff;
+  --shadow:0 2px 12px rgba(0,0,0,.07);
+}
+[data-theme="dark"]{
+  --bg:#0f1117;--card:#1a1d27;--border:#2a2d3a;
+  --text:#e8eaf0;--muted:#8b93a8;--blue-light:#1e2340;
+  --topbar-bg:#13161f;--modal-bg:#1a1d27;--input-bg:#13161f;
+  --green-light:#0d2e15;--amber-light:#2e1f00;
+  --shadow:0 2px 12px rgba(0,0,0,.3);
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;transition:background .2s,color .2s;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,7,20,0.7);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--modal-bg);border-radius:18px;padding:2.5rem 2rem;width:100%;max-width:420px;box-shadow:0 24px 70px rgba(0,0,0,0.25);animation:popIn .25s ease;border:1px solid var(--border);}
+@keyframes popIn{from{transform:scale(.93);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-logo{display:flex;align-items:center;gap:.5rem;font-size:1.35rem;font-weight:800;justify-content:center;margin-bottom:1.5rem;}
+.modal-logo span{color:var(--blue);}
+.modal-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:1.5rem;}
+.modal-tab{flex:1;text-align:center;padding:.6rem;font-weight:600;font-size:.88rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .2s,border-color .2s;}
+.modal-tab.active{color:var(--blue);border-color:var(--blue);}
+.form-group{margin-bottom:.9rem;}
+.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.4rem;letter-spacing:.05em;text-transform:uppercase;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:.7rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;color:var(--text);background:var(--input-bg);outline:none;transition:border-color .2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--blue);}
+.form-group textarea{resize:vertical;min-height:80px;}
+.btn-full{width:100%;padding:.8rem;background:var(--blue);color:#fff;border:none;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.92rem;cursor:pointer;transition:background .2s,transform .1s;margin-top:.4rem;}
+.btn-full:hover{background:var(--blue-dark);}
+.btn-full:active{transform:scale(.98);}
+.btn-full:disabled{opacity:.55;cursor:not-allowed;}
+.form-hint{text-align:center;font-size:.76rem;color:var(--muted);margin-top:.6rem;line-height:1.5;}
+.form-error{background:#fff0f0;border:1px solid #ffc0c0;color:var(--red);border-radius:7px;padding:.55rem .8rem;font-size:.8rem;margin-top:.4rem;display:none;}
+[data-theme="dark"] .form-error{background:#2e1010;}
+.form-error.visible{display:block;}
+.form-success{background:var(--green-light);border:1px solid #b2f2bb;color:var(--green);border-radius:7px;padding:.55rem .8rem;font-size:.8rem;margin-top:.4rem;display:none;}
+.form-success.visible{display:block;}
+
+/* ── APP ── */
+#app{display:none;height:100vh;flex-direction:column;}
+#app.visible{display:flex;}
+
+/* ── TOPBAR ── */
+.topbar{height:56px;background:var(--topbar-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;flex-shrink:0;position:sticky;top:0;z-index:50;}
+.t-logo{font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:.4rem;cursor:pointer;}
+.t-logo span{color:var(--blue);}
+.t-right{display:flex;align-items:center;gap:.6rem;position:relative;}
+
+/* Global search bar in topbar */
+.global-search{display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--border);border-radius:24px;padding:.3rem .8rem .3rem .4rem;gap:.4rem;flex:1;max-width:320px;margin:0 .75rem;transition:border-color .2s;}
+.global-search:focus-within{border-color:var(--blue);}
+.global-search svg{width:15px;height:15px;color:var(--muted);flex-shrink:0;}
+.global-search input{border:none;background:transparent;font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;color:var(--text);outline:none;width:100%;}
+.global-search input::placeholder{color:var(--muted);}
+
+/* AI search results dropdown */
+.search-results{position:absolute;top:52px;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);z-index:300;max-height:360px;overflow-y:auto;display:none;}
+.search-results.visible{display:block;}
+.search-result-item{padding:.7rem 1rem;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:.65rem;transition:background .15s;}
+.search-result-item:last-child{border-bottom:none;}
+.search-result-item:hover{background:var(--blue-light);}
+.search-result-icon{width:28px;height:28px;background:var(--blue-light);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.search-result-icon svg{width:14px;height:14px;color:var(--blue);}
+.search-result-title{font-size:.83rem;font-weight:600;margin-bottom:.15rem;}
+.search-result-meta{font-size:.72rem;color:var(--muted);}
+.search-ai-tag{font-size:.65rem;font-weight:700;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:1px 6px;border-radius:4px;margin-left:.4rem;}
+
+/* icon buttons in topbar */
+.icon-btn{background:none;border:none;cursor:pointer;padding:.4rem;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .15s;color:var(--muted);}
+.icon-btn:hover{background:var(--blue-light);color:var(--blue);}
+.icon-btn svg{width:18px;height:18px;}
+
+/* dark mode toggle */
+.theme-toggle{width:40px;height:22px;background:var(--border);border-radius:11px;position:relative;cursor:pointer;border:none;transition:background .2s;flex-shrink:0;}
+.theme-toggle.dark{background:var(--blue);}
+.theme-toggle-thumb{width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .2s;}
+.theme-toggle.dark .theme-toggle-thumb{transform:translateX(18px);}
+
+.notif-btn{position:relative;cursor:pointer;background:none;border:none;padding:.4rem;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.notif-btn:hover{background:var(--blue-light);}
+.notif-btn svg{width:18px;height:18px;color:var(--muted);}
+.notif-badge{position:absolute;top:2px;right:2px;background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;font-size:.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--topbar-bg);}
+.notif-badge.hidden{display:none;}
+.user-chip{display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.3rem .5rem;border-radius:8px;transition:background .15s;}
+.user-chip:hover{background:var(--blue-light);}
+.avatar{width:30px;height:30px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.72rem;color:#fff;flex-shrink:0;}
+.uname{font-weight:600;font-size:.83rem;color:var(--text);}
+.role-pill{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:10px;}
+.role-verified{background:#d3f9d8;color:#2f9e44;}
+.role-student{background:var(--blue-light);color:var(--blue);}
+[data-theme="dark"] .role-verified{background:#0d2e15;color:#69db7c;}
+
+/* notif panel */
+.notif-panel{position:absolute;top:50px;right:0;width:330px;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.18);z-index:200;overflow:hidden;}
+.notif-panel.hidden{display:none;}
+.notif-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-weight:700;font-size:.88rem;display:flex;justify-content:space-between;align-items:center;}
+.notif-clear{font-size:.73rem;font-weight:500;color:var(--blue);cursor:pointer;}
+.notif-list{max-height:340px;overflow-y:auto;}
+.notif-item{padding:.7rem 1rem;border-bottom:1px solid var(--border);display:flex;gap:.6rem;align-items:flex-start;transition:background .15s;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--blue-light);}
+.notif-dot2{width:7px;height:7px;background:var(--blue);border-radius:50%;margin-top:5px;flex-shrink:0;}
+.notif-item p{font-size:.8rem;line-height:1.5;color:var(--text);}
+.notif-item time{font-size:.7rem;color:var(--muted);display:block;margin-top:2px;}
+.notif-empty{padding:1.5rem;text-align:center;color:var(--muted);font-size:.83rem;}
+
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:var(--sidebar-w);background:var(--topbar-bg);border-right:1px solid var(--border);flex-shrink:0;overflow-y:auto;padding:1rem 0;display:flex;flex-direction:column;}
+.sidebar-label{font-size:.65rem;font-weight:700;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:.2rem 1.25rem .45rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.52rem 1.25rem;font-size:.85rem;font-weight:500;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:background .15s,color .15s;}
+.nav-item:hover{background:var(--blue-light);color:var(--blue);}
+.nav-item.active{background:var(--blue-light);color:var(--blue);font-weight:700;border-left-color:var(--blue);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;}
+.sidebar-bottom{margin-top:auto;padding:1rem 1.25rem;border-top:1px solid var(--border);}
+.logout-link{display:flex;align-items:center;gap:.5rem;font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer;padding:.45rem 0;}
+.logout-link:hover{color:var(--red);}
+.logout-link svg{width:15px;height:15px;}
+.main{flex:1;overflow-y:auto;padding:1.5rem;}
+
+/* ── BREADCRUMB ── */
+.breadcrumb{display:flex;align-items:center;gap:.35rem;font-size:.78rem;color:var(--muted);margin-bottom:1rem;flex-wrap:wrap;}
+.breadcrumb span{cursor:pointer;transition:color .15s;}
+.breadcrumb span:hover{color:var(--blue);}
+.breadcrumb .sep{color:var(--border);}
+.breadcrumb .current{color:var(--text);font-weight:600;cursor:default;}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;}
+.page-title{font-size:1.25rem;font-weight:800;letter-spacing:-.02em;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.82rem;cursor:pointer;border:none;transition:opacity .2s,transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{opacity:.88;}
+.btn-secondary{background:var(--bg);color:var(--text);border:1.5px solid var(--border);}
+.btn-secondary:hover{border-color:var(--blue);color:var(--blue);}
+.btn-danger{background:#fff0f0;color:var(--red);border:1.5px solid #ffd0d0;}
+.btn-danger:hover{background:#ffe0e0;}
+.btn-green{background:var(--green-light);color:var(--green);border:1.5px solid #b2f2bb;}
+.btn-green:hover{opacity:.85;}
+[data-theme="dark"] .btn-danger{background:#2e1010;border-color:#5a1a1a;}
+[data-theme="dark"] .btn-green{background:#0d2e15;border-color:#1a5c2a;}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;}
+
+/* ── FOLDER GRID ── */
+.folder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;}
+.folder-card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:1.1rem .9rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .15s;text-align:center;}
+.folder-card:hover{border-color:var(--blue);box-shadow:0 4px 18px rgba(59,91,219,.12);transform:translateY(-2px);}
+.folder-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.folder-icon svg{width:24px;height:24px;}
+.folder-name{font-weight:700;font-size:.85rem;line-height:1.3;}
+.folder-count{font-size:.73rem;color:var(--muted);}
+.folder-year-label{font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--blue-light);color:var(--blue);margin-top:.15rem;}
+
+/* ── FILE GRID ── */
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:1rem;}
+.file-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:box-shadow .2s,transform .15s;}
+.file-card:hover{box-shadow:0 4px 22px rgba(59,91,219,.12);transform:translateY(-2px);}
+.file-thumb{height:120px;display:flex;align-items:center;justify-content:center;position:relative;}
+.thumb-blue{background:#dde7ff;}
+.thumb-green{background:#d3f9d8;}
+.thumb-pink{background:#fce4ec;}
+.thumb-amber{background:#fff3cd;}
+.thumb-teal{background:#d3f9f2;}
+[data-theme="dark"] .thumb-blue{background:#1e2340;}
+[data-theme="dark"] .thumb-green{background:#0d2e15;}
+[data-theme="dark"] .thumb-pink{background:#2e0d1a;}
+[data-theme="dark"] .thumb-amber{background:#2e1f00;}
+[data-theme="dark"] .thumb-teal{background:#0d2e2a;}
+.file-pdf{width:52px;height:66px;background:var(--card);border-radius:4px;border:1.5px solid var(--border);display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.file-pdf::before{content:'';position:absolute;top:9px;left:7px;right:7px;height:3px;background:var(--border);border-radius:2px;box-shadow:0 5px 0 var(--border),0 10px 0 var(--border),0 15px 0 var(--border);}
+.pdf-tag{background:#e63946;color:#fff;font-size:.48rem;font-weight:700;padding:2px 5px;border-radius:2px;}
+.file-badge{position:absolute;top:7px;right:7px;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:4px;}
+.badge-new{background:#d3f9d8;color:#2f9e44;}
+.badge-flagged{background:#fff0f0;color:var(--red);}
+.file-body{padding:.8rem;}
+.file-title{font-weight:600;font-size:.82rem;line-height:1.35;margin-bottom:.5rem;color:var(--text);}
+.file-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;}
+.star-display{display:flex;align-items:center;gap:.2rem;font-size:.75rem;color:var(--muted);}
+.star-display .sf{color:#f4a629;}
+.star-count{font-size:.7rem;color:var(--muted);margin-left:.2rem;}
+.verified-tag{background:#d3f9d8;color:#2f9e44;font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:3px;}
+[data-theme="dark"] .verified-tag{background:#0d2e15;color:#69db7c;}
+
+/* star rating input */
+.star-rate{display:flex;gap:2px;cursor:pointer;}
+.star-rate span{font-size:1.1rem;color:var(--border);transition:color .1s;cursor:pointer;}
+.star-rate span.lit{color:#f4a629;}
+
+/* ── UPLOAD PANEL ── */
+.upload-panel{background:var(--card);border:2px dashed var(--border);border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1.25rem;cursor:pointer;transition:border-color .2s;}
+.upload-panel:hover{border-color:var(--blue);}
+.upload-panel svg{width:34px;height:34px;color:var(--blue);margin:0 auto .5rem;display:block;}
+.upload-panel p{color:var(--muted);font-size:.83rem;margin-bottom:.65rem;}
+
+/* ── MODALS (Upload, Profile, Verify) ── */
+.side-modal{position:fixed;inset:0;background:rgba(5,7,20,0.65);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.side-modal.hidden{display:none;}
+.side-modal-box{background:var(--modal-bg);border-radius:16px;padding:1.75rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.22);border:1px solid var(--border);animation:popIn .2s ease;}
+.side-modal-box h3{font-size:1.05rem;font-weight:800;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem;}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.btn-row{display:flex;gap:.65rem;justify-content:flex-end;margin-top:1rem;}
+.file-drop-area{border:2px dashed var(--border);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+.file-drop-area:hover,.file-drop-area.drag-over{border-color:var(--blue);background:var(--blue-light);}
+.file-drop-area input[type=file]{display:none;}
+.file-drop-area svg{width:28px;height:28px;color:var(--blue);margin:0 auto .4rem;display:block;}
+.file-drop-area p{font-size:.8rem;color:var(--muted);}
+.file-drop-area .selected-file{font-size:.78rem;font-weight:600;color:var(--blue);margin-top:.3rem;}
+
+/* ── PROFILE PAGE ── */
+.profile-header{display:flex;align-items:center;gap:1.25rem;margin-bottom:1.5rem;}
+.profile-avatar-big{width:70px;height:70px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.4rem;color:#fff;flex-shrink:0;}
+.profile-name{font-size:1.2rem;font-weight:800;}
+.profile-sub{font-size:.82rem;color:var(--muted);margin-top:.2rem;}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;}
+.verify-request-card{background:var(--amber-light);border:1.5px solid #ffe599;border-radius:12px;padding:1.1rem 1.25rem;margin-top:1rem;}
+[data-theme="dark"] .verify-request-card{border-color:#5c3d00;}
+.verify-request-card h4{font-weight:700;font-size:.9rem;margin-bottom:.4rem;color:var(--amber);}
+.verify-request-card p{font-size:.8rem;color:var(--muted);margin-bottom:.75rem;line-height:1.55;}
+.verify-status-pending{background:var(--amber-light);color:var(--amber);border:1px solid #ffe599;border-radius:6px;padding:.4rem .8rem;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:.35rem;}
+.verify-status-verified{background:var(--green-light);color:var(--green);border:1px solid #b2f2bb;border-radius:6px;padding:.4rem .8rem;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:.35rem;}
+
+/* ── DOUBT SOLVER ── */
+.filter-chip{padding:.35rem .8rem;border:1.5px solid var(--border);border-radius:20px;font-size:.78rem;font-weight:600;cursor:pointer;background:var(--card);color:var(--muted);transition:background .15s,border-color .15s,color .15s;}
+.filter-chip:hover,.filter-chip.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.doubt-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.8rem;transition:box-shadow .2s;}
+.doubt-card:hover{box-shadow:var(--shadow);}
+.doubt-subject{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:4px;}
+.sub-math{background:#dde7ff;color:#3b5bdb;}
+.sub-sci{background:#d3f9d8;color:#2f9e44;}
+.sub-eng{background:#fff3cd;color:#f08c00;}
+.sub-other{background:var(--bg);color:var(--muted);}
+[data-theme="dark"] .sub-math{background:#1e2340;color:#748ffc;}
+[data-theme="dark"] .sub-sci{background:#0d2e15;color:#69db7c;}
+[data-theme="dark"] .sub-eng{background:#2e1f00;color:#ffd43b;}
+.doubt-status{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:12px;}
+.status-open{background:var(--amber-light);color:var(--amber);}
+.status-answered{background:var(--green-light);color:var(--green);}
+.answer-item{background:var(--bg);border-radius:8px;padding:.6rem .85rem;margin-bottom:.45rem;font-size:.82rem;line-height:1.6;border:1px solid var(--border);}
+.answer-by{font-weight:700;font-size:.73rem;color:var(--blue);margin-bottom:.15rem;}
+.answer-rating{display:flex;align-items:center;gap:.25rem;margin-top:.35rem;}
+.answer-rating .ar{font-size:.85rem;color:var(--border);cursor:pointer;transition:color .1s;}
+.answer-rating .ar.lit{color:#f4a629;}
+.reply-input-row{display:flex;gap:.5rem;margin-top:.6rem;}
+.reply-input{flex:1;padding:.45rem .7rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Plus Jakarta Sans',sans-serif;font-size:.8rem;outline:none;background:var(--input-bg);color:var(--text);}
+.reply-input:focus{border-color:var(--blue);}
+.post-doubt-form{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem;margin-bottom:1.1rem;}
+.post-doubt-form h4{font-weight:700;margin-bottom:.75rem;font-size:.9rem;}
+
+/* ── FORUM ── */
+.notice-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.15rem;margin-bottom:.8rem;transition:box-shadow .2s;}
+.notice-card:hover{box-shadow:var(--shadow);}
+.notice-course{font-size:.7rem;font-weight:700;background:var(--blue-light);color:var(--blue);padding:2px 8px;border-radius:4px;}
+
+/* ── DASHBOARD STATS ── */
+.welcome-banner{background:linear-gradient(135deg,#3b5bdb 0%,#5c7cfa 60%,#748ffc 100%);border-radius:16px;padding:1.6rem 1.75rem;color:#fff;margin-bottom:1.25rem;position:relative;overflow:hidden;}
+.welcome-banner::before{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:rgba(255,255,255,.07);border-radius:50%;}
+.welcome-banner::after{content:'';position:absolute;right:60px;bottom:-80px;width:160px;height:160px;background:rgba(255,255,255,.05);border-radius:50%;}
+.welcome-banner h2{font-size:1.3rem;font-weight:800;margin-bottom:.25rem;position:relative;}
+.welcome-banner p{opacity:.85;font-size:.88rem;position:relative;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-bottom:1.25rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;}
+.stat-label2{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.25rem;}
+.stat-val{font-size:1.45rem;font-weight:800;color:var(--text);}
+.stat-sub{font-size:.7rem;color:var(--muted);margin-top:.12rem;}
+.section-h{font-size:.95rem;font-weight:700;margin-bottom:.8rem;color:var(--text);}
+
+/* ── LOADING ── */
+.loading-state{text-align:center;padding:3rem;color:var(--muted);}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .65s linear infinite;margin:0 auto .85rem;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── BACK BTN ── */
+.back-btn{display:inline-flex;align-items:center;gap:.3rem;font-size:.8rem;font-weight:600;color:var(--blue);cursor:pointer;margin-bottom:.85rem;background:none;border:none;font-family:'Plus Jakarta Sans',sans-serif;padding:0;}
+
+/* ── CONTENT MODERATION warning ── */
+.moderation-warn{background:var(--amber-light);border:1.5px solid #ffe599;border-radius:8px;padding:.6rem .85rem;font-size:.78rem;color:var(--amber);margin-top:.4rem;display:none;}
+[data-theme="dark"] .moderation-warn{border-color:#5c3d00;}
+.moderation-warn.visible{display:block;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1a1d27;color:#fff;padding:.7rem 1.15rem;border-radius:10px;font-size:.83rem;font-weight:500;z-index:9999;animation:slideUp .3s ease;box-shadow:0 4px 24px rgba(0,0,0,.25);max-width:320px;line-height:1.4;}
+.toast.hidden{display:none;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── ADMIN PANEL ── */
+.admin-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.admin-table th{padding:.5rem .75rem;text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);}
+.admin-table td{padding:.6rem .75rem;border-bottom:1px solid var(--border);color:var(--text);}
+.admin-table tr:last-child td{border-bottom:none;}
+.admin-table tr:hover td{background:var(--blue-light);}
+
+/* ── LEADERBOARD ── */
+.leaderboard-item{display:flex;align-items:center;gap:.75rem;padding:.6rem .9rem;border-bottom:1px solid var(--border);}
+.leaderboard-item:last-child{border-bottom:none;}
+.lb-rank{width:24px;height:24px;border-radius:50%;background:var(--blue-light);color:var(--blue);font-weight:800;font-size:.72rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lb-rank.gold{background:#fff3cd;color:#f08c00;}
+.lb-rank.silver{background:#f0f0f0;color:#666;}
+.lb-rank.bronze{background:#fce4ec;color:#c2255c;}
+.lb-name{flex:1;font-weight:600;font-size:.83rem;}
+.lb-score{font-size:.78rem;font-weight:700;color:var(--blue);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .upload-grid{grid-template-columns:1fr;}
+  .profile-grid{grid-template-columns:1fr;}
+  .global-search{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH MODAL ══ -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <div class="modal-logo">
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#3b5bdb"/><path d="M7 15L14 8L21 15L18 15L18 21L10 21L10 15Z" fill="white"/></svg>
+      <div><span>Study</span>Share</div>
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" onclick="switchTab('login')">Login</div>
+      <div class="modal-tab" onclick="switchTab('register')">Register</div>
+    </div>
+    <div id="loginForm">
+      <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="your@email.com"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="loginPwd" placeholder="Enter password"/></div>
+      <div class="form-error" id="loginError"></div>
+      <button class="btn-full" id="loginBtn" onclick="doLogin()">Login</button>
+    </div>
+    <div id="registerForm" style="display:none;">
+      <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Your full name"/></div>
+      <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="your@college.edu"/></div>
+      <div class="form-group"><label>Student ID</label><input type="text" id="regStudentId" placeholder="e.g. STU2024001"/></div>
+      <div class="form-group"><label>Branch</label>
+        <select id="regBranch"><option value="">Select Branch</option>
+          <option>Computer Engineering</option><option>Mechanical Engineering</option>
+          <option>Electronics &amp; Telecom</option><option>Civil Engineering</option>
+          <option>Information Technology</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Password (min 6 chars)</label><input type="password" id="regPwd" placeholder="Create password"/></div>
+      <div class="form-error" id="registerError"></div>
+      <button class="btn-full" id="registerBtn" onclick="doRegister()">Create Account</button>
+      <p class="form-hint">Want upload access? Apply for verification from your profile after login.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ UPLOAD MODAL ══ -->
+<div class="side-modal hidden" id="uploadModal">
+  <div class="side-modal-box">
+    <h3>📤 Upload Resource</h3>
+    <div class="form-group"><label>Title</label><input type="text" id="up_title" placeholder="e.g. Calculus Chapter 3 Notes"/></div>
+    <div class="upload-grid">
+      <div class="form-group"><label>Engineering Year</label>
+        <select id="up_eng_year"><option>First Year (FY)</option><option>Second Year (SY)</option><option>Third Year (TY)</option><option>Fourth Year (BE)</option></select>
+      </div>
+      <div class="form-group"><label>Branch</label>
+        <select id="up_branch"><option>Computer Engineering</option><option>Mechanical Engineering</option><option>Electronics &amp; Telecom</option><option>Civil Engineering</option><option>Information Technology</option></select>
+      </div>
+    </div>
+    <div class="upload-grid">
+      <div class="form-group"><label>Term</label>
+        <select id="up_term"><option>Term 1</option><option>Term 2</option></select>
+      </div>
+      <div class="form-group"><label>Subject</label><input type="text" id="up_subject" placeholder="e.g. Engineering Maths"/></div>
+    </div>
+    <div class="form-group" id="up_examyear_group" style="display:none;">
+      <label>Exam Year <span style="font-size:.7rem;color:var(--muted)">(Past Papers only)</span></label>
+      <input type="text" id="up_examyear" placeholder="e.g. 2023"/>
+    </div>
+    <div class="form-group"><label>Description (optional)</label><textarea id="up_desc" placeholder="Brief description of the content..."></textarea></div>
+    <!-- File upload with Cloudinary -->
+    <div class="form-group">
+      <label>Upload File <span style="font-size:.7rem;color:var(--muted)">(PDF, PPT, DOC, images — max 10MB)</span></label>
+      <div class="file-drop-area" id="fileDropArea" onclick="document.getElementById('up_file').click()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+        <p>Drag &amp; drop or click to browse</p>
+        <div class="selected-file" id="selectedFileName"></div>
+        <input type="file" id="up_file" accept=".pdf,.ppt,.pptx,.doc,.docx,.jpg,.jpeg,.png" onchange="handleFileSelect(this)"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>OR Google Drive / External Link</label>
+      <input type="url" id="up_link" placeholder="https://drive.google.com/...  (optional if file uploaded)"/>
+    </div>
+    <div class="form-error" id="uploadError"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeUpload()">Cancel</button>
+      <button class="btn btn-primary" id="uploadBtn" onclick="submitUpload()">Upload Resource</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="t-logo" onclick="showPage('home')">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="7" fill="#3b5bdb"/><path d="M7 15L14 8L21 15L18 15L18 21L10 21L10 15Z" fill="white"/></svg>
+      <span>Study</span>Share
+    </div>
+    <!-- AI Search -->
+    <div class="global-search" style="position:relative;flex:1;max-width:360px;margin:0 1rem;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="globalSearchInput" placeholder="AI search — try 'calculus notes FY' or 'data structures'..." oninput="handleSearch(this.value)" autocomplete="off"/>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <div class="t-right">
+      <!-- dark mode toggle -->
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode">
+        <div class="theme-toggle-thumb"></div>
+      </button>
+      <button class="notif-btn" onclick="toggleNotif()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-badge hidden" id="notifBadge">0</span>
+      </button>
+      <div class="notif-panel hidden" id="notifPanel">
+        <div class="notif-header">Notifications <span class="notif-clear" onclick="clearNotifs()">Clear all</span></div>
+        <div class="notif-list" id="notifList"><div class="notif-empty">No notifications</div></div>
+      </div>
+      <div class="user-chip" onclick="showPage('profile')">
+        <div class="avatar" id="topAvatar">SU</div>
+        <span class="uname" id="topName">Student</span>
+        <span class="role-pill" id="topRolePill">Student</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div>
+        <div class="sidebar-label">Overview</div>
+        <div class="nav-item active" onclick="showPage('home')" data-page="home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="nav-item" onclick="showPage('resources')" data-page="resources">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Browse All
+        </div>
+      </div>
+      <div style="margin-top:.5rem;">
+        <div class="sidebar-label">Resources</div>
+        <div class="nav-item" onclick="showPage('lecture')" data-page="lecture">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Lecture Notes
+        </div>
+        <div class="nav-item" onclick="showPage('pastpapers')" data-page="pastpapers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Past Papers
+        </div>
+        <div class="nav-item" onclick="showPage('textbooks')" data-page="textbooks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Textbooks
+        </div>
+        <div class="nav-item" onclick="showPage('studentnotes')" data-page="studentnotes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Student Notes
+        </div>
+      </div>
+      <div style="margin-top:.5rem;">
+        <div class="sidebar-label">Community</div>
+        <div class="nav-item" onclick="showPage('forums')" data-page="forums">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Course Forums
+        </div>
+        <div class="nav-item" onclick="showPage('doubts')" data-page="doubts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Doubt Solver
+        </div>
+        <div class="nav-item" onclick="showPage('leaderboard')" data-page="leaderboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Leaderboard
+        </div>
+      </div>
+      <div style="margin-top:.5rem;" id="adminSidebarSection" class="hidden">
+        <div class="sidebar-label">Admin</div>
+        <div class="nav-item" onclick="showPage('admin')" data-page="admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Admin Panel
+        </div>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="nav-item" onclick="showPage('profile')" data-page="profile" style="padding-left:0;border:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          My Account
+        </div>
+        <div class="logout-link" onclick="doLogout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </div>
+      </div>
+    </div>
+    <div class="main" id="mainContent">
+      <div class="loading-state"><div class="spinner"></div>Loading...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<!-- ══ FIREBASE + APP LOGIC ══ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile }
+  from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, serverTimestamp, where, arrayUnion, increment, limit }
+  from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const firebaseConfig = {
+  apiKey: "AIzaSyBbotSZUhgfPAkwwb80YgfhTkSo9zyd0hU",
+  authDomain: "studyshare-1924f.firebaseapp.com",
+  projectId: "studyshare-1924f",
+  storageBucket: "studyshare-1924f.firebasestorage.app",
+  messagingSenderId: "821521872747",
+  appId: "1:821521872747:web:3f11a220c7b52d84043e2e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const SUPABASE_URL = "https://zanyjgbrikuvglbkluva.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphbnlqZ2JyaWt1dmdsYmtsdXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Mjk0NjAsImV4cCI6MjA5MDIwNTQ2MH0.DY6scmpMLt_3aw905jR83Qu1M_xnmvEoScnGJwflcAE";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ── FILE UPLOAD FUNCTION ──
+// Uses 0x0.st (primary) → file.io (fallback) → tmpfiles.org (last resort)
+// Zero setup, no accounts, no API keys needed.
+
+async function uploadToSupabase(file, uploadSection, meta = {}) {
+  if (!file) throw new Error("No file selected.");
+
+  console.log(`Uploading to Supabase: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+
+  const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+  const uid = currentUser?.uid || 'guest';
+  const year = meta.engYear || 'unknown-year';
+  const branch = (meta.branch || 'unknown-branch').replace(/[^\w.\-]+/g, '_');
+  const subject = (meta.subject || 'misc').replace(/[^\w.\-]+/g, '_');
+  const examYear = meta.examYear ? `/${meta.examYear}` : '';
+
+  const filePath = `${uploadSection}/${year}/${branch}/${subject}${examYear}/${uid}_${Date.now()}_${safeName}`;
+
+  const { error: uploadError } = await supabase
+    .storage
+    .from('studyfiles')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (uploadError) {
+    console.error('Supabase upload error:', uploadError);
+    throw new Error(uploadError.message || 'Upload failed.');
+  }
+
+  const { data: publicData } = supabase
+    .storage
+    .from('studyfiles')
+    .getPublicUrl(filePath);
+
+  return {
+    secure_url: publicData.publicUrl,
+    path: filePath,
+    name: file.name,
+    size: file.size
+  };
+}
+
+// ── STATE ──
+let currentUser = null, currentUserData = null;
+let currentPage = 'home', folderPath = [], uploadSection = null;
+let activeFilter = 'All', notifications = [], uploadedFile = null;
+let allResources = [];
+let doubtSortMode = 'recent';
+
+// ── THEME ──
+window.toggleTheme = () => {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeToggle').classList.toggle('dark', !isDark);
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+};
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+if (savedTheme === 'dark') document.getElementById('themeToggle')?.classList.add('dark');
+
+// ── AUTH STATE ──
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user || null;   // ✅ THIS IS THE IMPORTANT FIX
+
+  if (user) {
+    console.log("User signed in:", user.uid, user.email);
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        currentUserData = userSnap.data();
+        console.log("Loaded user data:", currentUserData);
+      } else {
+        const defaultData = {
+          name: user.email?.split('@')[0] || "Student",
+          email: user.email || "",
+          role: 'student',
+          points: 0,
+          verificationStatus: 'none',
+          branch: '',
+          studentId: '',
+          createdAt: serverTimestamp()
+        };
+
+        await setDoc(userRef, defaultData);
+        currentUserData = defaultData;
+        console.log("Created new user profile:", currentUserData);
+      }
+    } catch (err) {
+      console.error("Auth load error:", err);
+      currentUserData = {
+        name: user.email || "Student",
+        email: user.email || "",
+        role: 'student',
+        points: 0,
+        branch: '',
+        studentId: ''
+      };
+      showToast("Could not fully load account data.");
+    }
+
+    updateTopbar();
+
+    document.getElementById('authModal').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+
+    const isAdmin = currentUserData?.role === 'admin' || currentUserData?.role === 'owner';
+    const adminSection = document.getElementById('adminSidebarSection');
+    if (adminSection) adminSection.classList.toggle('hidden', !isAdmin);
+
+    showPage('home');
+    loadAllResources();
+    listenForDoubts();
+    listenForForums();
+  } else {
+    currentUser = null;
+    currentUserData = null;
+
+    document.getElementById('authModal').classList.remove('hidden');
+    document.getElementById('app').style.display = 'none';
+  }
+});
+function updateTopbar() {
+  const initials = (currentUserData?.name || 'SU')
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  const avatar = document.getElementById('topAvatar');
+  const nameEl = document.getElementById('topName');
+  const pill = document.getElementById('topRolePill');
+
+  if (avatar) avatar.textContent = initials;
+  if (nameEl) nameEl.textContent = (currentUserData?.name || 'Student').split(' ')[0];
+
+  if (!pill) return;
+
+  if (currentUserData?.role === 'owner') {
+    pill.textContent = '👑 Owner';
+    pill.className = 'role-pill role-verified';
+  } else if (currentUserData?.role === 'admin') {
+    pill.textContent = '⚡ Admin';
+    pill.className = 'role-pill role-verified';
+  } else if (currentUserData?.role === 'author') {
+    pill.textContent = '✓ Author';
+    pill.className = 'role-pill role-verified';
+  } else {
+    pill.textContent = 'Student';
+    pill.className = 'role-pill role-student';
+  }
+}
+
+// ── AUTH FUNCTIONS ──
+window.switchTab = (tab) => {
+  document.querySelectorAll('.modal-tab').forEach((t,i) => t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+};
+
+window.doLogin = async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd = document.getElementById('loginPwd').value;
+  const btn = document.getElementById('loginBtn'), err = document.getElementById('loginError');
+  if (!email||!pwd){showErr(err,'Please fill in all fields.');return;}
+  btn.disabled=true; btn.textContent='Logging in...';
+  try { await signInWithEmailAndPassword(auth, email, pwd); }
+  catch(e){ btn.disabled=false; btn.textContent='Login'; showErr(err,friendlyError(e.code)); }
+};
+
+window.doRegister = async () => {
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const studentId=document.getElementById('regStudentId').value.trim();
+  const branch=document.getElementById('regBranch').value;
+  const pwd=document.getElementById('regPwd').value;
+  const btn=document.getElementById('registerBtn'), err=document.getElementById('registerError');
+  if(!name||!email||!studentId||!branch||!pwd){showErr(err,'Please fill all fields.');return;}
+  if(pwd.length<6){showErr(err,'Password must be at least 6 characters.');return;}
+  btn.disabled=true; btn.textContent='Creating...';
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    await setDoc(doc(db,'users',cred.user.uid),{name,email,studentId,branch,role:'user',verified:false,canGrantAccess:false,points:0,verificationStatus:'none',createdAt:serverTimestamp()});
+    showToast('Account created! Welcome to StudyShare.');
+  } catch(e){ btn.disabled=false; btn.textContent='Create Account'; showErr(err,friendlyError(e.code)); }
+};
+
+window.doLogout = async () => { await signOut(auth); notifications=[]; };
+
+function friendlyError(c){
+  return {'auth/user-not-found':'No account found.','auth/wrong-password':'Wrong password.','auth/email-already-in-use':'Email already registered.','auth/invalid-email':'Invalid email.','auth/invalid-credential':'Invalid email or password.'}[c]||'Something went wrong.';
+}
+function showErr(el,msg){el.textContent=msg;el.classList.add('visible');}
+function canDeleteResource(file) {
+  if (!currentUser || !currentUserData || !file) return false;
+
+  const sameUid =
+    file.uploadedByUid &&
+    currentUser.uid &&
+    file.uploadedByUid === currentUser.uid;
+
+  const sameName =
+    file.uploadedBy &&
+    currentUserData?.name &&
+    file.uploadedBy.trim().toLowerCase() === currentUserData.name.trim().toLowerCase();
+
+  return (
+    sameUid ||
+    sameName ||
+    currentUserData.role === 'admin' ||
+    currentUserData.role === 'owner'
+  );
+}
+
+window.deleteResource = async (section, id, title = 'this file') => {
+  if (!section || !id) return;
+
+  const ok = confirm(`Delete "${title}"? This cannot be undone.`);
+  if (!ok) return;
+
+  try {
+    const snap = await getDoc(doc(db, section, id));
+    if (!snap.exists()) {
+      showToast('File not found.');
+      return;
+    }
+
+    const file = snap.data();
+
+    if (file.filePath) {
+      const { error: storageError } = await supabase
+        .storage
+        .from('studyfiles')
+        .remove([file.filePath]);
+
+      if (storageError) {
+        console.warn('Supabase delete warning:', storageError.message);
+      }
+    }
+
+    await deleteDoc(doc(db, section, id));
+
+    showToast('Resource deleted successfully.');
+    await loadAllResources();
+    renderPage();
+  } catch (e) {
+    console.error('Delete resource error:', e);
+    showToast('Failed to delete resource.');
+  }
+};
+// ── POINTS HELPER — use updateDoc+increment if field exists, setDoc merge as fallback ──
+async function addPoints(uid, pts) {
+  if (!uid) return;
+  try {
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+    if (snap.exists() && typeof snap.data().points === 'number') {
+      await updateDoc(userRef, { points: increment(pts) });
+    } else {
+      const current = snap.exists() ? (snap.data().points || 0) : 0;
+      await setDoc(userRef, { points: current + pts }, { merge: true });
+    }
+    if (uid === currentUser?.uid) {
+      currentUserData.points = (currentUserData.points || 0) + pts;
+      const el = document.getElementById('stat-points');
+      if (el) el.textContent = currentUserData.points;
+    }
+  } catch(e) { console.error('addPoints failed:', e); }
+}
+
+window.grantAccess = async () => {
+  const email = document.getElementById('grantEmail')?.value.trim().toLowerCase();
+  const role = document.getElementById('grantRole')?.value;
+  const errDiv = document.getElementById('grantAccessError');
+
+  if (!errDiv) return;
+  if (!email) {
+    errDiv.textContent = "Enter a valid email";
+    errDiv.classList.add('visible');
+    return;
+  }
+
+  if (!currentUser || !currentUserData) {
+    errDiv.textContent = "You must be logged in to grant access.";
+    errDiv.classList.add('visible');
+    return;
+  }
+
+  if (currentUserData.role !== 'admin' && currentUserData.role !== 'owner') {
+    errDiv.textContent = "Only administrators can grant access.";
+    errDiv.classList.add('visible');
+    return;
+  }
+
+  try {
+    const q = query(collection(db, 'users'), where('email', '==', email));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      errDiv.textContent = "User not found. Ask them to register first.";
+      errDiv.classList.add('visible');
+      return;
+    }
+
+    for (const userDoc of querySnapshot.docs) {
+      await updateDoc(doc(db, 'users', userDoc.id), {
+        role: role,
+        verificationStatus: role === 'author' ? 'approved' : 'none'
+      });
+    }
+    showToast(`${email} now has ${role} access.`);
+    errDiv.classList.remove('visible');
+    document.getElementById('grantEmail').value = '';
+  } catch (e) {
+    console.error("Grant access error:", e);
+    errDiv.textContent = "Failed: " + e.message;
+    errDiv.classList.add('visible');
+  }
+};
+
+// ── NAVIGATION ──
+window.showPage = (page) => {
+  currentPage=page; folderPath=[];
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
+  renderPage();
+};
+function renderPage(){
+  const pages={home:renderHome,lecture:()=>renderResourcePage('lecture'),pastpapers:()=>renderResourcePage('pastpapers'),textbooks:()=>renderResourcePage('textbooks'),studentnotes:()=>renderResourcePage('studentnotes'),forums:renderForums,doubts:renderDoubts,profile:renderProfile,leaderboard:renderLeaderboard,admin:renderAdmin,resources:renderBrowseAll};
+  (pages[currentPage]||renderHome)();
+}
+
+// ── LOAD ALL RESOURCES (for AI search) ──
+async function loadAllResources() {
+  const sections = ['lecture','pastpapers','textbooks','studentnotes'];
+  const all = [];
+  for (const s of sections) {
+    const snap = await getDocs(collection(db, s));
+    snap.docs.forEach(d => all.push({id:d.id,section:s,...d.data()}));
+  }
+  allResources = all;
+}
+
+// ── AI SEARCH ──
+window.handleSearch = (val) => {
+  const resultsEl = document.getElementById('searchResults');
+  if (!val || val.length < 2) { resultsEl.classList.remove('visible'); return; }
+  const lower = val.toLowerCase();
+  const terms = lower.split(' ').filter(t=>t.length>1);
+  const scored = allResources.map(r => {
+    let score = 0;
+    const haystack = `${r.title||''} ${r.subject||''} ${r.branch||''} ${r.engYear||''} ${r.term||''} ${r.examYear||''} ${r.description||''}`.toLowerCase();
+    terms.forEach(t => {
+      if (haystack.includes(t)) score += haystack.split(t).length - 1;
+      if ((r.title||'').toLowerCase().includes(t)) score += 3;
+      if ((r.subject||'').toLowerCase().includes(t)) score += 2;
+    });
+    return {r, score};
+  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,8);
+
+  if (!scored.length) {
+    resultsEl.innerHTML = `<div style="padding:1rem;text-align:center;font-size:.82rem;color:var(--muted)">No results for "${val}"</div>`;
+    resultsEl.classList.add('visible');
+    return;
+  }
+  const sectionIcons = {lecture:'📚',pastpapers:'📄',textbooks:'📖',studentnotes:'✏️'};
+  resultsEl.innerHTML = scored.map(({r})=>`
+    <div class="search-result-item" onclick="openSearchResult('${r.section}','${r.id}')">
+      <div class="search-result-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div>
+        <div class="search-result-title">${r.title||'Untitled'} <span class="search-ai-tag">AI</span></div>
+        <div class="search-result-meta">${sectionIcons[r.section]||''} ${r.section} · ${r.engYear||''} ${r.branch||''} ${r.subject?'· '+r.subject:''}</div>
+      </div>
+    </div>`).join('');
+  resultsEl.classList.add('visible');
+};
+
+window.openSearchResult = (section, id) => {
+  document.getElementById('searchResults').classList.remove('visible');
+  document.getElementById('globalSearchInput').value = '';
+  const res = allResources.find(r=>r.id===id);
+  if (res) openFilePreview(res);
+};
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.global-search')) document.getElementById('searchResults').classList.remove('visible');
+  if (!e.target.closest('.notif-btn') && !e.target.closest('.notif-panel')) document.getElementById('notifPanel').classList.add('hidden');
+});
+
+// ── DASHBOARD ──
+async function renderHome() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+  const [l,p,t,s,d] = await Promise.all([getDocs(collection(db,'lecture')),getDocs(collection(db,'pastpapers')),getDocs(collection(db,'textbooks')),getDocs(collection(db,'studentnotes')),getDocs(collection(db,'doubts'))]);
+  const totalRes = l.size+p.size+t.size+s.size;
+  const answered = d.docs.filter(x=>x.data().status==='answered').length;
+  const recent = [...l.docs,...p.docs,...t.docs,...s.docs].sort((a,b)=>(b.data().createdAt?.seconds||0)-(a.data().createdAt?.seconds||0)).slice(0,6);
+  mc.innerHTML = `
+  <div class="welcome-banner">
+    <h2>Welcome back, ${(currentUserData?.name||'Student').split(' ')[0]}! 👋</h2>
+    <p>Your smart academic hub — find, upload, and discuss study resources.</p>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label2">Total Resources</div><div class="stat-val">${totalRes}</div><div class="stat-sub">Across all sections</div></div>
+    <div class="stat-card"><div class="stat-label2">Doubts Solved</div><div class="stat-val">${answered}</div><div class="stat-sub">Out of ${d.size} posted</div></div>
+    <div class="stat-card"><div class="stat-label2">Your Branch</div><div class="stat-val" style="font-size:.9rem;">${(currentUserData?.branch||'—').split(' ')[0]}</div><div class="stat-sub">${currentUserData?.role==='verified'?'Verified Uploader':currentUserData?.role==='admin'?'Admin':'Student'}</div></div>
+    <div class="stat-card"><div class="stat-label2">Your Points</div><div class="stat-val" id="stat-points">${currentUserData?.points||0}</div><div class="stat-sub">Contribution score</div></div>
+  </div>
+  ${currentUserData?.verificationStatus==='pending'?`<div class="card" style="margin-bottom:1.25rem;border-color:var(--amber);background:var(--amber-light)"><span style="font-size:.85rem;font-weight:600;color:var(--amber)">⏳ Your verification request is pending admin approval.</span></div>`:''}
+  <div class="section-h">Recently Added</div>
+  <div class="file-grid">
+   ${recent.map(d => {
+  const data = d.data();
+  const section =
+    l.docs.some(x => x.id === d.id) ? 'lecture' :
+    p.docs.some(x => x.id === d.id) ? 'pastpapers' :
+    t.docs.some(x => x.id === d.id) ? 'textbooks' :
+    'studentnotes';
+
+  return fileCardHTML({ id: d.id, ...data, section });
+}).join('') || '<p style="color:var(--muted)">No resources yet — be the first to upload!</p>'}
+  </div>`;
+}
+
+// ── BROWSE ALL ──
+async function renderBrowseAll() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+  const [l,p,t,s] = await Promise.all([getDocs(query(collection(db,'lecture'),orderBy('createdAt','desc'),limit(6))),getDocs(query(collection(db,'pastpapers'),orderBy('createdAt','desc'),limit(4))),getDocs(query(collection(db,'textbooks'),orderBy('createdAt','desc'),limit(4))),getDocs(query(collection(db,'studentnotes'),orderBy('createdAt','desc'),limit(4)))]);
+  const section = (title, docs, type) => `
+    <div style="margin-bottom:2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+        <div class="section-h" style="margin:0">${title}</div>
+        <button class="btn btn-secondary" onclick="showPage('${type}')" style="font-size:.75rem;padding:.3rem .75rem">View all</button>
+      </div>
+      <div class="file-grid">${docs.map(d=>fileCardHTML({id:d.id,...d.data(),section:type})).join('')||'<p style="color:var(--muted)">None yet</p>'}</div>
+    </div>`;
+  mc.innerHTML = `<div class="page-header"><h1 class="page-title">Browse All Resources</h1></div>
+    ${section('📚 Lecture Notes',l.docs,'lecture')}
+    ${section('📄 Past Papers',p.docs,'pastpapers')}
+    ${section('📖 Textbooks',t.docs,'textbooks')}
+    ${section('✏️ Student Notes',s.docs,'studentnotes')}`;
+}
+
+// ── RESOURCE PAGES ──
+const thumbColors = ['thumb-blue','thumb-green','thumb-pink','thumb-amber','thumb-teal'];
+const sectionTitles = {lecture:'Lecture Notes',pastpapers:'Past Papers',textbooks:'Textbooks',studentnotes:'Student Notes'};
+const ENG_YEARS = ['First Year (FY)','Second Year (SY)','Third Year (TY)','Fourth Year (BE)'];
+const yearColors = [['#dde7ff','#3b5bdb'],['#d3f9d8','#2f9e44'],['#fff3cd','#f08c00'],['#fce4ec','#c2255c']];
+
+// ── NAVIGATION HELPERS ── (use data attributes to avoid encodeURIComponent in onclick strings)
+// All folder/back navigation goes through these two functions.
+// goTo(type, level, ...vals) sets folderPath and re-renders.
+window.goTo = (btn) => {
+  const type  = btn.dataset.type;
+  const level = btn.dataset.level;
+  const v     = JSON.parse(btn.dataset.vals || '[]');
+  if (level === 'root') { folderPath = []; }
+  else if (level === 'year')     { folderPath = ['year', v[0]]; }
+  else if (level === 'branch')   { folderPath = ['branch', v[0], v[1]]; }
+  else if (level === 'examyear') { folderPath = ['examyear', v[0], v[1], v[2]]; }
+  else if (level === 'subject')  { folderPath = ['subject', v[0], v[1], v[2]]; }
+  renderResourcePage(type);
+};
+
+function navBtn(label, type, level, vals, cls='back-btn') {
+  const valsJson = JSON.stringify(vals).replace(/"/g, '&quot;');
+  return `<button class="${cls}" data-type="${type}" data-level="${level}" data-vals="${valsJson}" onclick="goTo(this)">${label}</button>`;
+}
+
+function folderBtn(label, sublabel, count, type, level, vals, bg, color) {
+  const valsJson = JSON.stringify(vals).replace(/"/g, '&quot;');
+  return `<div class="folder-card" data-type="${type}" data-level="${level}" data-vals="${valsJson}" onclick="goTo(this)">
+    ${folderIconHTML(bg, color)}
+    <div class="folder-name">${label}</div>
+    ${sublabel ? `<div class="folder-year-label">${sublabel}</div>` : ''}
+    <div class="folder-count">${count} file${count !== 1 ? 's' : ''}</div>
+  </div>`;
+}
+
+async function renderResourcePage(type) {
+  currentPage = type;
+  document.querySelectorAll('.nav-item')
+    .forEach(n => n.classList.toggle('active', n.dataset.page === type));
+  const mc = document.getElementById('mainContent');
+  const canUpload =
+    currentUserData?.role === 'owner' ||
+    currentUserData?.role === 'admin' ||
+    currentUserData?.role === 'author' ||
+    type === 'studentnotes';
+
+  // Fetch ALL docs, filter in JS — no Firestore composite indexes needed
+  const safeGetAll = async () => {
+    try {
+      const snap = await getDocs(collection(db, type));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      mc.innerHTML = `<div class="card"><p style="color:var(--red);">Failed to load: ${e.message}</p></div>`;
+      return null;
+    }
+  };
+
+  // ── ROOT: show FY / SY / TY / BE year folders ──
+  if (folderPath.length === 0) {
+    mc.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+    const items = await safeGetAll();
+    if (!items) return;
+    mc.innerHTML = `
+      ${uploadPanelHTML(type, canUpload)}
+      <div class="page-header"><h1 class="page-title">${sectionTitles[type]}</h1></div>
+      <div class="folder-grid">
+        ${ENG_YEARS.map((yr, i) => {
+          const cnt = items.filter(x => x.engYear === yr).length;
+          return folderBtn(yr, ['FY','SY','TY','BE'][i], cnt, type, 'year', [yr], yearColors[i][0], yearColors[i][1]);
+        }).join('')}
+      </div>`;
+    return;
+  }
+
+  // ── YEAR: show branch folders (all 5 branches always shown) ──
+  if (folderPath[0] === 'year') {
+    const year = folderPath[1];
+    mc.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+    const allItems = await safeGetAll();
+    if (!allItems) return;
+    const items = allItems.filter(x => x.engYear === year);
+
+    const ALL_BRANCHES = [
+      'Computer Engineering',
+      'Information Technology',
+      'Mechanical Engineering',
+      'Electronics & Telecom',
+      'Civil Engineering'
+    ];
+    const branchColors = [
+      ['#dde7ff','#3b5bdb'],
+      ['#d3f9d8','#2f9e44'],
+      ['#fff3cd','#f08c00'],
+      ['#fce4ec','#c2255c'],
+      ['#e8eaf6','#5c6bc0']
+    ];
+
+    mc.innerHTML = `
+      ${uploadPanelHTML(type, canUpload)}
+      ${navBtn('← Back', type, 'root', [])}
+      ${breadcrumbHTML(type, [year])}
+      <div class="folder-grid">
+        ${ALL_BRANCHES.map((b, bi) => {
+          const cnt = items.filter(i => i.branch === b).length;
+          return folderBtn(b, null, cnt, type, 'branch', [year, b], branchColors[bi][0], branchColors[bi][1]);
+        }).join('')}
+      </div>`;
+    return;
+  }
+
+  // ── BRANCH: show subjects (or exam years for past papers) ──
+  if (folderPath[0] === 'branch') {
+    const year   = folderPath[1];
+    const branch = folderPath[2];
+    mc.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+    const allItems = await safeGetAll();
+    if (!allItems) return;
+    const items = allItems.filter(x => x.engYear === year && x.branch === branch);
+
+    if (type === 'pastpapers') {
+      const examYears = [...new Set(items.map(i => i.examYear).filter(Boolean))].sort((a,b)=>b-a);
+      mc.innerHTML = `
+        ${uploadPanelHTML(type, canUpload)}
+        ${navBtn('← Back', type, 'year', [year])}
+        ${breadcrumbHTML(type, [year, branch])}
+        <div class="folder-grid">
+          ${examYears.map(ey =>
+            folderBtn(ey, ey + ' Exam', items.filter(i=>i.examYear===ey).length, type, 'examyear', [year, branch, ey], '#d3f9d8', '#2f9e44')
+          ).join('')}
+          ${!examYears.length ? '<p style="color:var(--muted);grid-column:1/-1">No papers uploaded yet for this branch.</p>' : ''}
+        </div>`;
+    } else {
+      const subjects = [...new Set(items.map(i => i.subject).filter(Boolean))].sort();
+      mc.innerHTML = `
+        ${uploadPanelHTML(type, canUpload)}
+        ${navBtn('← Back', type, 'year', [year])}
+        ${breadcrumbHTML(type, [year, branch])}
+        <div class="folder-grid">
+          ${subjects.map(s =>
+            folderBtn(s, null, items.filter(i=>i.subject===s).length, type, 'subject', [year, branch, s], '#e8eaf6', '#3b5bdb')
+          ).join('')}
+          ${!subjects.length ? '<p style="color:var(--muted);grid-column:1/-1">No subjects uploaded yet for this branch.</p>' : ''}
+        </div>`;
+    }
+    return;
+  }
+
+  // ── EXAM YEAR: show papers ──
+  if (folderPath[0] === 'examyear') {
+    const year     = folderPath[1];
+    const branch   = folderPath[2];
+    const examYear = folderPath[3];
+    mc.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+    const allItems = await safeGetAll();
+    if (!allItems) return;
+    const files = allItems.filter(x => x.engYear === year && x.branch === branch && x.examYear === examYear);
+    mc.innerHTML = `
+      ${uploadPanelHTML(type, canUpload)}
+      ${navBtn('← Back', type, 'branch', [year, branch])}
+      ${breadcrumbHTML(type, [year, branch, examYear + ' Exam'])}
+      <div class="file-grid">${files.map(f=>fileCardHTML({...f, section:type})).join('')}</div>
+      ${!files.length ? '<p style="color:var(--muted)">No papers here yet.</p>' : ''}`;
+    return;
+  }
+
+  // ── SUBJECT: show files ──
+  if (folderPath[0] === 'subject') {
+    const year    = folderPath[1];
+    const branch  = folderPath[2];
+    const subject = folderPath[3];
+    mc.innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+    const allItems = await safeGetAll();
+    if (!allItems) return;
+    const files = allItems.filter(x => x.engYear === year && x.branch === branch && x.subject === subject);
+    mc.innerHTML = `
+      ${uploadPanelHTML(type, canUpload)}
+      ${navBtn('← Back', type, 'branch', [year, branch])}
+      ${breadcrumbHTML(type, [year, branch, subject])}
+      <div class="file-grid">${files.map(f=>fileCardHTML({...f, section:type})).join('')}</div>
+      ${!files.length ? '<p style="color:var(--muted)">No files here yet. Be the first to upload!</p>' : ''}`;
+    return;
+  }
+}
+
+// ── DELETE FILE ──
+window.confirmDelete = async (fileId, section, btn) => {
+  if (!confirm('Delete this file? This cannot be undone.')) return;
+  try {
+    btn.disabled = true;
+    btn.textContent = '...';
+    await deleteDoc(doc(db, section, fileId));
+    btn.closest('.file-card').remove();
+    showToast('File deleted.');
+    await addPoints(currentUser?.uid, -10);
+  } catch(e) {
+    showToast('Delete failed: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '🗑';
+  }
+};
+
+window.drillDown = (type, ...parts) => { folderPath = parts; renderResourcePage(type); };
+window.renderResourcePage = renderResourcePage;
+
+function folderIconHTML(bg,color){
+  return `<div class="folder-icon" style="background:${bg}"><svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>`;
+}
+function breadcrumbHTML(type, parts) {
+  let h = `<div class="breadcrumb"><span data-type="${type}" data-level="root" data-vals="[]" onclick="goTo(this)">${sectionTitles[type]}</span>`;
+  const levelMap = ['year','branch','subject'];
+  parts.forEach((p, i) => {
+    h += `<span class="sep">›</span>`;
+    if (i === parts.length - 1) {
+      h += `<span class="current">${p}</span>`;
+    } else {
+      const level = levelMap[i] || 'year';
+      const vals = JSON.stringify(parts.slice(0, i + 1)).replace(/"/g, '&quot;');
+      h += `<span data-type="${type}" data-level="${level}" data-vals="${vals}" onclick="goTo(this)" style="cursor:pointer">${p}</span>`;
+    }
+  });
+  return h + '</div>';
+}
+
+function fileCardHTML(file, sectionOverride = null) {
+  const section = sectionOverride || file.section || currentPage;
+  const color = thumbColors[Math.abs((file.title || '').length) % thumbColors.length];
+
+  const avgRating = Number(file.rating || 0);
+  const ratingsCount = Number(file.ratingsCount || 0);
+  const rounded = Math.round(avgRating);
+
+  const stars = Array.from({ length: 5 }, (_, i) =>
+    `<span class="${i < rounded ? 'sf' : ''}">★</span>`
+  ).join('');
+
+  const isOwner = canDeleteResource(file);
+
+  return `
+    <div class="file-card">
+      <div class="file-thumb ${color}">
+        <div class="file-pdf">
+          <span class="pdf-tag">PDF</span>
+        </div>
+
+        ${isOwner ? `
+          <button
+            onclick="event.stopPropagation(); deleteResource('${section}','${file.id}','${(file.title || 'Untitled').replace(/'/g, "\\'")}')"
+            title="Delete file"
+            style="
+              position:absolute;
+              top:8px;
+              left:8px;
+              background:#fff0f0;
+              color:#e03131;
+              border:1px solid #ffd0d0;
+              border-radius:8px;
+              padding:6px 8px;
+              cursor:pointer;
+              font-size:.72rem;
+              font-weight:700;
+              z-index:2;
+            "
+          >🗑</button>
+        ` : ''}
+
+        <span class="file-badge badge-new">New</span>
+      </div>
+
+      <div class="file-body">
+        <div class="file-title">${file.title || 'Untitled'}</div>
+
+        <div class="file-meta">
+          <div class="star-display">
+            ${stars}
+            <span class="star-count">${ratingsCount ? `${avgRating.toFixed(1)} (${ratingsCount})` : '—'}</span>
+          </div>
+
+          <button
+            class="btn btn-primary"
+            style="padding:.35rem .8rem;font-size:.75rem;"
+            onclick="openFilePreviewById('${section}','${file.id}')"
+          >
+            Open
+          </button>
+        </div>
+
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.7rem;">
+         ${file.uploadedBy || file.uploaderName || file.uploadedByName || 'Unknown'}
+        </div>
+
+        <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.35rem;">
+          Rate:
+        </div>
+
+        <div class="star-rate" data-file-id="${file.id}" data-section="${section}">
+          ${Array.from({ length: 5 }, (_, i) => `
+            <span onclick="rateResource('${section}','${file.id}',${i + 1})">★</span>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+window.openFilePreviewById = async (section, id) => {
+  try {
+    const snap = await getDoc(doc(db, section, id));
+    if (!snap.exists()) {
+      showToast('File not found.');
+      return;
+    }
+
+    const file = { id: snap.id, section, ...snap.data() };
+    openFilePreview(file);
+  } catch (e) {
+    console.error('openFilePreviewById error:', e);
+    showToast('Failed to open file.');
+  }
+};
+
+// ── FILE PREVIEW MODAL (open file) ──
+window.openFilePreview = (f) => {
+  if (!f) return;
+
+  if (typeof f === 'string') {
+    try {
+      f = JSON.parse(f);
+    } catch (e) {
+      console.error('Invalid file preview payload:', e);
+      showToast('Could not open file.');
+      return;
+    }
+  }
+window.setFilter = (filter) => {
+  activeFilter = filter;
+  renderDoubts();
+};
+
+window.sortDoubts = (mode) => {
+  doubtSortMode = mode;
+  renderDoubts();
+};
+  const url = f.fileUrl || f.externalLink || f.link || '';
+
+  console.log('Opening file:', f);
+  console.log('Resolved URL:', url);
+
+  if (!url) {
+    showToast('No link available for this file.');
+    return;
+  }
+
+  window.open(url, '_blank');
+
+  if (f.id && (f.section || currentPage)) {
+    updateDoc(doc(db, f.section || currentPage, f.id), {
+      views: increment(1)
+    }).catch(() => {});
+  }
+};
+
+// ── STAR RATING ──
+window.hoverStars = (id, n) => {
+  document.querySelectorAll(`#${id} span`).forEach((s,i)=>{ s.textContent = i<n?'★':'☆'; s.classList.toggle('lit',i<n); });
+};
+window.resetStars = (id, current) => {
+  document.querySelectorAll(`#${id} span`).forEach((s,i)=>{ s.textContent=i<current?'★':'☆'; s.classList.toggle('lit',i<current); });
+};
+window.rateFile = async (fileId, section, stars) => {
+  const ref = doc(db, section, fileId);
+  await updateDoc(ref, { ratingSum: increment(stars), ratingCount: increment(1) });
+  showToast(`Rated ${stars} star${stars!==1?'s':''}! Thanks.`);
+  await addPoints(currentUser?.uid, 2);
+  currentUserData.points = (currentUserData.points||0)+2;
+};
+// DELETE FILE FUNCTION - Users can delete their own files, admins can delete any file
+window.deleteFile = async (fileId, section, event) => {
+  if (event) event.stopPropagation();
+  
+  if (!confirm("⚠️ Delete this file permanently? This action cannot be undone.")) return;
+  
+  try {
+    // Verify permission: user is owner OR admin
+    const fileRef = doc(db, section, fileId);
+    const fileSnap = await getDoc(fileRef);
+    
+    if (!fileSnap.exists()) {
+      showToast("File not found.");
+      return;
+    }
+    
+    const fileData = fileSnap.data();
+    const isOwner = fileData.uploaderUid === currentUser?.uid;
+    const isAdmin = currentUserData?.role === 'admin' || currentUserData?.role === 'owner';
+    
+    if (!isOwner && !isAdmin) {
+      showToast("You can only delete your own uploads.");
+      return;
+    }
+    
+    await deleteDoc(fileRef);
+    showToast("File deleted successfully.");
+    
+    // Refresh the current view
+    if (currentPage === 'home') await renderHome();
+    else if (currentPage === 'resources') await renderBrowseAll();
+    else if (['lecture','pastpapers','textbooks','studentnotes'].includes(currentPage)) {
+      folderPath = [];
+      await renderResourcePage(currentPage);
+    }
+    
+    // Reload resources for search
+    await loadAllResources();
+    
+  } catch(e) { 
+    showToast("Delete failed: " + e.message); 
+  }
+};
+// ── UPLOAD ──
+function uploadPanelHTML(type, canUpload) {
+  if (!canUpload) return '';
+  return `<div class="upload-panel" onclick="openUpload('${type}')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+    <p>${currentUserData?.role==='student'?'Share your notes with classmates':'Upload a verified resource for all students'}</p>
+    <button class="btn btn-primary">+ Upload File</button>
+  </div>`;
+}
+
+window.openUpload = (type) => {
+  uploadSection = type;
+  document.getElementById('up_examyear_group').style.display = type==='pastpapers'?'block':'none';
+  document.getElementById('uploadModal').classList.remove('hidden');
+  uploadedFile = null;
+  document.getElementById('selectedFileName').textContent = '';
+};
+window.closeUpload = () => {
+  document.getElementById('uploadModal').classList.add('hidden');
+
+  document.getElementById('up_title').value = '';
+  document.getElementById('up_subject').value = '';
+  document.getElementById('up_desc').value = '';
+  document.getElementById('up_link').value = '';
+
+  const examYearEl = document.getElementById('up_examyear');
+  if (examYearEl) examYearEl.value = '';
+
+  const fileInput = document.getElementById('up_file');
+  if (fileInput) fileInput.value = '';
+
+  const selectedFileName = document.getElementById('selectedFileName');
+  if (selectedFileName) selectedFileName.textContent = '';
+
+  const uploadError = document.getElementById('uploadError');
+  if (uploadError) uploadError.classList.remove('visible');
+
+  uploadedFile = null;
+};
+
+window.handleFileSelect = (input) => {
+  if (!input.files || !input.files[0]) return;
+
+  const file = input.files[0];
+
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('File size must be under 10MB.');
+    input.value = '';
+    return;
+  }
+
+  uploadedFile = file;
+
+  const selectedFileName = document.getElementById('selectedFileName');
+  if (selectedFileName) {
+    selectedFileName.textContent = file.name;
+  }
+};
+
+// file drop
+const fda = document.getElementById('fileDropArea');
+fda.addEventListener('dragover', e=>{e.preventDefault();fda.classList.add('drag-over');});
+fda.addEventListener('dragleave', ()=>fda.classList.remove('drag-over'));
+fda.addEventListener('drop', e=>{e.preventDefault();fda.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f){document.getElementById('up_file').files=e.dataTransfer.files;window.handleFileSelect(document.getElementById('up_file'));}});
+
+// Content moderation for student notes
+const BANNED_KEYWORDS = ['adult','porn','nude','sex','hack','crack','pirate','torrent','illegal','bet','casino'];
+function moderateContent(title, desc) {
+  const text = `${title} ${desc}`.toLowerCase();
+  return BANNED_KEYWORDS.some(k=>text.includes(k));
+}
+
+window.submitUpload = async () => {
+  const title = document.getElementById('up_title').value.trim();
+  const engYear = document.getElementById('up_eng_year').value;
+  const branch = document.getElementById('up_branch').value;
+  const term = document.getElementById('up_term').value;
+  const subject = document.getElementById('up_subject').value.trim();
+  const examYear = document.getElementById('up_examyear')?.value.trim() || '';
+  const desc = document.getElementById('up_desc').value.trim();
+  const link = document.getElementById('up_link').value.trim();
+  const err = document.getElementById('uploadError');
+  const btn = document.getElementById('uploadBtn');
+
+  if (!uploadSection) {
+    showErr(err, 'Upload section not selected.');
+    return;
+  }
+
+  if (!title || !subject) {
+    showErr(err, 'Please fill title and subject.');
+    return;
+  }
+
+  if (!uploadedFile && !link) {
+    showErr(err, 'Please upload a file or provide a link.');
+    return;
+  }
+
+  if (uploadSection === 'pastpapers' && !examYear) {
+    showErr(err, 'Please enter exam year for past papers.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+  err.classList.remove('visible');
+
+  try {
+    let fileUrl = '';
+    let fileName = '';
+
+    let filePath = '';
+
+if (uploadedFile) {
+  const uploadRes = await uploadToSupabase(uploadedFile, uploadSection, {
+    engYear,
+    branch,
+    subject,
+    examYear
+  });
+
+  fileUrl = uploadRes.secure_url || '';
+  fileName = uploadRes.name || uploadedFile.name || '';
+  filePath = uploadRes.path || '';
+}
+
+    await addDoc(collection(db, uploadSection), {
+      title,
+      engYear,
+      branch,
+      term,
+      subject,
+      examYear: uploadSection === 'pastpapers' ? examYear : '',
+      description: desc,
+      fileUrl,
+      filePath,
+      fileName,
+      externalLink: link || '',
+      uploadedBy: currentUserData?.name || 'Unknown',
+      uploadedByUid: currentUser?.uid || '',
+      uploaderRole: currentUserData?.role || 'student',
+      createdAt: serverTimestamp(),
+      rating: 0,
+      ratingsCount: 0,
+      downloads: 0
+    });
+
+    await addPoints(currentUser?.uid, 5);
+    showToast('Resource uploaded successfully!');
+    closeUpload();
+    await loadAllResources();
+    renderPage();
+  } catch (e) {
+    console.error('Upload error:', e);
+    showErr(err, e.message || 'Upload failed.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Upload Resource';
+  }
+};
+
+// ── FORUMS ──
+function listenForForums() {
+  onSnapshot(query(collection(db,'forums'),orderBy('createdAt','desc')), snap => {
+    snap.docChanges().forEach(ch => {
+      if (ch.type==='added' && notifications.length>0) addNotif(`📢 New notice: "${ch.doc.data().title}"`);
+    });
+    if (currentPage==='forums') renderForums();
+  });
+}
+
+async function renderForums() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML=`<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+  const snap = await getDocs(query(collection(db,'forums'),orderBy('createdAt','desc')));
+  const canPost =
+  currentUserData?.role === 'owner' ||
+  currentUserData?.role === 'admin' ||
+  currentUserData?.role === 'author';
+  mc.innerHTML=`
+  <div class="page-header">
+    <h1 class="page-title">Course Forums</h1>
+    ${canPost
+  ? `<button class="btn btn-primary" onclick="openForumPost()">+ Post Notice</button>`
+  : `<span style="font-size:.8rem;color:var(--muted)">Only verified authors can post</span>`
+}
+  </div>
+  <div id="forumPostArea"></div>
+  ${snap.docs.map(d=>{const f=d.data();return `<div class="notice-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+      <span class="notice-course">${f.course||'General'}</span>
+      <span style="font-size:.7rem;color:var(--muted)">${f.createdAt?new Date(f.createdAt.seconds*1000).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Just now'}</span>
+    </div>
+    <div style="font-weight:700;font-size:.9rem;margin-bottom:.3rem;">${f.title}</div>
+    <div style="font-size:.82rem;color:var(--muted);line-height:1.6;">${f.body}</div>
+    <div style="font-size:.7rem;color:var(--muted);margin-top:.5rem;">Posted by ${f.postedBy||'Unknown'}</div>
+  </div>`;}).join('')}
+  ${snap.empty?'<p style="color:var(--muted)">No notices yet.</p>':''}`;
+}
+
+window.openForumPost = () => {
+  const area = document.getElementById('forumPostArea');
+  area.innerHTML = `<div class="post-doubt-form">
+    <h4>Post a Notice</h4>
+    <div class="form-group"><label>Course</label><input type="text" id="f_course" placeholder="e.g. Engineering Maths"/></div>
+    <div class="form-group"><label>Title</label><input type="text" id="f_title" placeholder="Notice title"/></div>
+    <div class="form-group"><label>Message</label><textarea id="f_body" placeholder="Write your notice..."></textarea></div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="document.getElementById('forumPostArea').innerHTML=''">Cancel</button><button class="btn btn-primary" onclick="submitForumPost()">Post</button></div>
+  </div>`;
+};
+
+window.submitForumPost = async () => {
+  if (!(
+    currentUserData?.role === 'owner' ||
+    currentUserData?.role === 'admin' ||
+    currentUserData?.role === 'author'
+  )) {
+    showToast('Only verified authors can post in forums.');
+    return;
+  }
+
+  const course = document.getElementById('f_course').value.trim();
+  const title = document.getElementById('f_title').value.trim();
+  const body = document.getElementById('f_body').value.trim();
+
+  if (!title || !body) {
+    showToast('Please fill title and message.');
+    return;
+  }
+
+  await addDoc(collection(db,'forums'), {
+    course,
+    title,
+    body,
+    postedBy: currentUserData?.name,
+    createdAt: serverTimestamp()
+  });
+
+  addNotif(`📢 New notice: "${title}"`);
+  showToast('Notice posted!');
+  renderForums();
+};
+
+// ── DOUBT SOLVER ──
+function listenForDoubts() {
+  onSnapshot(query(collection(db,'doubts'),orderBy('createdAt','desc')), snap => {
+    snap.docChanges().forEach(ch => {
+      if (ch.type==='modified'&&ch.doc.data().status==='answered'&&ch.doc.data().askerUid===currentUser?.uid)
+        addNotif(`✅ Your doubt "${ch.doc.data().question?.slice(0,40)}..." was answered!`);
+    });
+  });
+}
+
+async function renderDoubts() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading...</div>';
+
+  try {
+    const snap = await getDocs(query(collection(db, 'doubts'), orderBy('createdAt', 'desc')));
+    let doubts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // filter
+    if (activeFilter !== 'All') {
+      doubts = doubts.filter(d => (d.subject || 'Other') === activeFilter);
+    }
+
+    // sort/filter mode
+    if (doubtSortMode === 'open') {
+      doubts = doubts.filter(d => d.status !== 'answered');
+    } else if (doubtSortMode === 'answered') {
+      doubts = doubts.filter(d => d.status === 'answered');
+    }
+
+    const subClass = {
+      Mathematics: 'sub-math',
+      Science: 'sub-sci',
+      Engineering: 'sub-eng',
+      Other: 'sub-other'
+    };
+
+    mc.innerHTML = `
+      <div class="page-header">
+        <h1 class="page-title">Doubt Solver</h1>
+        <button class="btn btn-primary" onclick="toggleDoubtForm()">✨ Post a Doubt</button>
+      </div>
+
+      <div id="postDoubtFormArea"></div>
+
+      <div style="display:flex;gap:.45rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;">
+        ${['All','Mathematics','Science','Engineering','Other'].map(s => `
+          <div class="filter-chip ${activeFilter === s ? 'active' : ''}" onclick="setFilter('${s}')">${s}</div>
+        `).join('')}
+
+        <select class="btn btn-secondary" style="margin-left:auto;border-radius:7px;font-size:.78rem;" onchange="sortDoubts(this.value)">
+          <option value="recent" ${doubtSortMode === 'recent' ? 'selected' : ''}>Most Recent</option>
+          <option value="open" ${doubtSortMode === 'open' ? 'selected' : ''}>Open First</option>
+          <option value="answered" ${doubtSortMode === 'answered' ? 'selected' : ''}>Answered First</option>
+        </select>
+      </div>
+
+      ${doubts.map(d => `
+        <div class="doubt-card" id="dc-${d.id}">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.4rem;margin-bottom:.55rem;">
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;">
+              <span class="doubt-subject ${subClass[d.subject || 'Other']}">${d.subject || 'Other'}</span>
+              <span class="doubt-status ${d.status === 'answered' ? 'status-answered' : 'status-open'}">
+                ${d.status === 'answered' ? '✓ Answered' : 'Open'}
+              </span>
+            </div>
+            <span style="font-size:.7rem;color:var(--muted)">
+              ${d.createdAt?.seconds ? new Date(d.createdAt.seconds * 1000).toLocaleDateString('en-IN') : ''}
+            </span>
+          </div>
+
+          <div style="font-weight:600;font-size:.88rem;margin-bottom:.35rem;">
+            ${d.question || 'Untitled doubt'}
+          </div>
+
+          <div style="font-size:.73rem;color:var(--muted);margin-bottom:.5rem;">
+            Asked by <b>${d.askerName || 'Unknown'}</b> · ${(d.answers || []).length} answer${(d.answers || []).length !== 1 ? 's' : ''}
+          </div>
+
+          ${(d.answers || []).map((a, ai) => `
+            <div class="answer-item">
+              <div class="answer-by">
+                ${a.by || 'Unknown'} ${a.role === 'verified' || a.role === 'admin' || a.role === 'owner' ? '<span class="verified-tag">✓</span>' : ''}
+              </div>
+              ${a.text || ''}
+              <div class="answer-rating">
+                Rate answer:
+                ${[1,2,3,4,5].map(n => `
+                  <span class="ar ${(a.rating || 0) >= n ? 'lit' : ''}" onclick="rateAnswer('${d.id}', ${ai}, ${n})">★</span>
+                `).join('')}
+                ${a.rating ? `<span style="font-size:.7rem;color:var(--muted);margin-left:.3rem">${Number(a.rating).toFixed(1)}</span>` : ''}
+              </div>
+            </div>
+          `).join('')}
+
+          <div class="reply-input-row">
+            <input class="reply-input" type="text" placeholder="Write an answer..." id="reply-${d.id}" />
+            <button class="btn btn-primary" style="font-size:.78rem;padding:.4rem .85rem;" onclick="postReply('${d.id}')">Reply</button>
+          </div>
+        </div>
+      `).join('')}
+
+      ${!doubts.length ? '<p style="color:var(--muted)">No doubts in this category.</p>' : ''}
+    `;
+  } catch (e) {
+    console.error('renderDoubts error:', e);
+    mc.innerHTML = `
+      <div class="page-header"><h1 class="page-title">Doubt Solver</h1></div>
+      <div class="card"><p style="color:var(--red)">Failed to load doubts.</p></div>
+    `;
+  }
+}
+
+window.setFilter=(f)=>{activeFilter=f;renderDoubts();};
+window.sortDoubts=(val)=>{renderDoubts();};
+window.toggleDoubtForm=()=>{
+  const a=document.getElementById('postDoubtFormArea');
+  if(a.innerHTML){a.innerHTML='';return;}
+  a.innerHTML=`<div class="post-doubt-form"><h4>Post Your Doubt</h4>
+    <div class="form-group"><label>Question</label><textarea id="new_q" placeholder="Describe your doubt clearly..."></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:.6rem;align-items:end;">
+      <div class="form-group" style="margin:0"><label>Subject</label>
+        <select id="new_sub"><option>Mathematics</option><option>Science</option><option>Engineering</option><option>Other</option></select>
+      </div>
+      <button class="btn btn-primary" onclick="submitDoubt()">Post Doubt</button>
+    </div>
+  </div>`;
+};
+window.submitDoubt=async()=>{
+  const q=document.getElementById('new_q')?.value.trim();
+  const sub=document.getElementById('new_sub')?.value;
+  if(!q){showToast('Please write your doubt.');return;}
+  await addDoc(collection(db,'doubts'),{question:q,subject:sub,askerName:currentUserData?.name||'Anonymous',askerUid:currentUser?.uid || '',status:'open',answers:[],createdAt:serverTimestamp()});
+  await addPoints(currentUser?.uid, 2);
+  showToast('Doubt posted! +2 points.');
+  document.getElementById('postDoubtFormArea').innerHTML='';
+  renderDoubts();
+};
+window.postReply=async(doubtId)=>{
+  const inp=document.getElementById(`reply-${doubtId}`);
+  if(!inp?.value.trim()){showToast('Please type an answer.');return;}
+  const ref=doc(db,'doubts',doubtId);
+  const snap=await getDoc(ref);
+  if(!snap.exists())return;
+  const data=snap.data();
+  const answers=[...(data.answers||[]),{by:currentUserData?.name||'Anonymous',role:currentUserData?.role||'student',text:inp.value.trim(),rating:0,ratingCount:0}];
+  await updateDoc(ref,{answers,status:'answered'});
+  await addPoints(currentUser?.uid, 5);
+  showToast('Answer posted! +5 points.');
+  renderDoubts();
+};
+window.rateAnswer=async(doubtId,ansIdx,stars)=>{
+  const ref=doc(db,'doubts',doubtId);
+  const snap=await getDoc(ref);
+  if(!snap.exists())return;
+  const data=snap.data();
+  const answers=[...data.answers];
+  answers[ansIdx]={...answers[ansIdx],rating:stars};
+  await updateDoc(ref,{answers});
+  showToast('Answer rated!');
+  renderDoubts();
+};
+
+// ── PROFILE ──
+async function renderProfile() {
+  const mc = document.getElementById('mainContent');
+  const u = currentUserData || {};
+
+  const isVerified = ['verified', 'admin', 'owner'].includes(u.role);
+  const isPending = u.verificationStatus === 'pending';
+
+  mc.innerHTML = `
+    <div class="page-header">
+      <h1 class="page-title">My Account</h1>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="profile-header">
+        <div class="profile-avatar-big">
+          ${(u.name || 'SU').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+        </div>
+        <div>
+          <div class="profile-name">${u.name || 'Student'}</div>
+          <div class="profile-sub">${u.email || ''} · ${u.studentId || ''}</div>
+          <div style="margin-top:.4rem;display:flex;gap:.4rem;flex-wrap:wrap;">
+            <span class="role-pill ${isVerified ? 'role-verified' : 'role-student'}">
+              ${u.role === 'owner' ? '👑 Owner' :
+                u.role === 'admin' ? '⚡ Admin' :
+                isVerified ? '✓ Verified' : 'Student'}
+            </span>
+            <span style="font-size:.75rem;color:var(--muted);">🏆 ${u.points || 0} points</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="edit_name" value="${u.name || ''}"/>
+        </div>
+
+        <div class="form-group">
+          <label>Branch</label>
+          <select id="edit_branch">
+            ${[
+              'Computer Engineering',
+              'Mechanical Engineering',
+              'Electronics & Telecom',
+              'Civil Engineering',
+              'Information Technology'
+            ]
+              .map(b => `<option ${u.branch === b ? 'selected' : ''}>${b}</option>`)
+              .join('')
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Student ID</label>
+          <input type="text" id="edit_sid" value="${u.studentId || ''}"/>
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="text" value="${u.email || ''}" disabled style="opacity:.6;"/>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+      </div>
+    </div>
+
+    ${(currentUserData?.role === 'owner' || currentUserData?.role === 'admin') ? `
+      <!-- Grant Access -->
+      <div class="card" style="margin-bottom:1rem;">
+        <h3 style="margin-bottom:1rem;">Grant Access</h3>
+
+        <div class="form-group">
+          <label>User Email</label>
+          <input type="email" id="grantEmail" placeholder="teacher@college.edu" />
+        </div>
+
+        <div class="form-group">
+          <label>Assign Role</label>
+          <select id="grantRole">
+            <option value="author">Author</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" onclick="grantAccess()">Grant Access</button>
+        <div class="form-error" id="grantAccessError"></div>
+      </div>
+    ` : ''}
+
+    <!-- Verification Request -->
+    <div class="card" style="margin-bottom:1rem;">
+      <h3 style="font-size:.95rem;font-weight:800;margin-bottom:.75rem;">🔐 Upload Verification</h3>
+
+      ${
+        isVerified
+          ? `<div class="verify-status-verified">✓ You are a verified uploader — you can upload Lecture Notes, Past Papers, and Textbooks.</div>`
+          : isPending
+          ? `<div class="verify-status-pending">⏳ Verification request pending. Admin will review soon.</div>`
+          : `
+            <div class="verify-request-card">
+              <h4>Apply for Verified Uploader Status</h4>
+              <p>Verified status lets you upload Lecture Notes, Past Papers, and Textbooks, and post Course Forum notices. Teachers and Class Representatives can apply.</p>
+
+              <div class="form-group">
+                <label>Your Role</label>
+                <select id="vr_role">
+                  <option value="teacher">Teacher / Professor</option>
+                  <option value="cr">Class Representative (CR)</option>
+                  <option value="other">Other Academic Staff</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Reason / Department</label>
+                <textarea id="vr_reason" placeholder="Briefly explain your role and department..."></textarea>
+              </div>
+
+              <button class="btn btn-primary" onclick="requestVerification()">Submit Request</button>
+            </div>
+          `
+      }
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card">
+      <h3 style="font-size:.95rem;font-weight:800;margin-bottom:.75rem;color:var(--red);">⚠️ Account</h3>
+      <button class="btn btn-danger" onclick="doLogout()">Logout</button>
+    </div>
+  `;
+}
+
+window.saveProfile = async () => {
+  if (!currentUser) {
+    showToast("You must be logged in to update your profile.");
+    return;
+  }
+
+  const nameEl = document.getElementById('edit_name');
+  const branchEl = document.getElementById('edit_branch');
+  const sidEl = document.getElementById('edit_sid');
+
+  if (!nameEl || !branchEl || !sidEl) {
+    showToast("Profile form is not loaded properly.");
+    return;
+  }
+
+  const name = nameEl.value.trim();
+  const branch = branchEl.value.trim();
+  const studentId = sidEl.value.trim();
+
+  if (!name) {
+    showToast("Name cannot be empty.");
+    return;
+  }
+
+  try {
+    const userRef = doc(db, 'users', currentUser.uid);
+
+    await setDoc(userRef, {
+      name,
+      branch,
+      studentId,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    currentUserData = {
+      ...currentUserData,
+      name,
+      branch,
+      studentId
+    };
+
+    updateTopbar();
+    showToast("Profile updated successfully.");
+  } catch (e) {
+    console.error("saveProfile error:", e);
+    showToast("Failed to save profile.");
+  }
+};
+
+window.requestVerification = async () => {
+  if (!currentUser) {
+    showToast('You must be logged in.');
+    return;
+  }
+
+  const roleEl = document.getElementById('vr_role');
+  const reasonEl = document.getElementById('vr_reason');
+
+  if (!roleEl || !reasonEl) {
+    showToast('Verification form not found.');
+    return;
+  }
+
+  const requestedRole = roleEl.value;
+  const reason = reasonEl.value.trim();
+
+  if (!reason) {
+    showToast('Please enter your reason / department.');
+    return;
+  }
+
+  try {
+    await setDoc(doc(db, 'verificationRequests', currentUser.uid), {
+      uid: currentUser.uid,
+      name: currentUserData?.name || 'Unknown',
+      email: currentUserData?.email || currentUser?.email || '',
+      branch: currentUserData?.branch || '',
+      studentId: currentUserData?.studentId || '',
+      requestedRole,
+      reason,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+      verificationStatus: 'pending'
+    });
+
+    currentUserData.verificationStatus = 'pending';
+
+    showToast('Verification request submitted.');
+    renderProfile();
+  } catch (e) {
+    console.error('requestVerification error:', e);
+    showToast('Failed to submit verification request.');
+  }
+};
+
+// ── LEADERBOARD ──
+async function renderLeaderboard() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML=`<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+  const snap = await getDocs(collection(db,'users'));
+  const users = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,20);
+  const rankClass = ['gold','silver','bronze'];
+  mc.innerHTML=`
+  <div class="page-header"><h1 class="page-title">🏆 Leaderboard</h1></div>
+  <div class="card" style="margin-bottom:1rem;background:linear-gradient(135deg,#fff3cd,#fffae0);border-color:#ffe599;">
+    <p style="font-size:.82rem;color:#8a6800;line-height:1.6;">Earn points by uploading resources (+10), answering doubts (+5), posting doubts (+2), and rating content (+2). Top contributors get highlighted here!</p>
+  </div>
+  <div class="card">
+    ${users.map((u,i)=>`
+    <div class="leaderboard-item">
+      <div class="lb-rank ${rankClass[i]||''}">${i+1}</div>
+      <div class="avatar" style="width:28px;height:28px;font-size:.65rem;">${(u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+      <div class="lb-name">${u.name||'Anonymous'} ${u.id===currentUser?.uid?'<span style="font-size:.7rem;color:var(--blue)">(You)</span>':''}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-right:.5rem;">${u.branch||''}</div>
+      ${u.role==='verified'||u.role==='admin'?'<span class="verified-tag" style="margin-right:.4rem;">✓</span>':''}
+      <div class="lb-score">⭐ ${u.points||0}</div>
+    </div>`).join('')}
+    ${!users.length?'<div class="notif-empty">No users yet.</div>':''}
+  </div>`;
+}
+
+// ── ADMIN PANEL ──
+async function renderAdmin() {
+  if (!(currentUserData?.role === 'admin' || currentUserData?.role === 'owner')) {
+  document.getElementById('mainContent').innerHTML =
+    '<p style="color:var(--red);padding:2rem">Access denied.</p>';
+  return;
+}
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML=`<div class="loading-state"><div class="spinner"></div>Loading...</div>`;
+  const [vReqs, flagged] = await Promise.all([
+    getDocs(query(collection(db,'verification_requests'),where('status','==','pending'))),
+    getDocs(query(collection(db,'moderation_flags'),orderBy('ts','desc'),limit(10)))
+  ]);
+  mc.innerHTML=`
+  <div class="page-header"><h1 class="page-title">⚡ Admin Panel</h1></div>
+  <div class="section-h">Pending Verification Requests (${vReqs.size})</div>
+  <div class="card" style="margin-bottom:1.25rem;overflow-x:auto;">
+    ${vReqs.empty?'<p style="color:var(--muted);font-size:.83rem;">No pending requests.</p>':`
+    <table class="admin-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Reason</th><th>Actions</th> </thead>
+      <tbody>
+        ${vReqs.docs.map(d=>{const r=d.data();return `<tr>
+           <td>${r.name||'?'}</td><td>${r.email||''}</td>
+           <td><span style="font-size:.75rem;font-weight:600;">${r.role||''}</span></td>
+          <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.reason||''}</td>
+          <td style="display:flex;gap:.4rem;">
+            <button class="btn btn-green" style="font-size:.72rem;padding:.28rem .6rem;" onclick="approveVerification('${d.id}','${r.uid}')">Approve</button>
+            <button class="btn btn-danger" style="font-size:.72rem;padding:.28rem .6rem;" onclick="rejectVerification('${d.id}','${r.uid}')">Reject</button>
+           </td>
+         </tr>`;}).join('')}
+      </tbody>
+     </table>`}
+  </div>
+  <div class="section-h">Flagged Content (${flagged.size})</div>
+  <div class="card" style="overflow-x:auto;">
+    ${flagged.empty?'<p style="color:var(--muted);font-size:.83rem;">No flagged content.</p>':`
+    <table class="admin-table">
+      <thead><tr><th>Title</th><th>Reason</th><th>Date</th></tr></thead>
+      <tbody>
+        ${flagged.docs.map(d=>{const f=d.data();return `<tr>
+           <td>${f.title||'?'}</td>
+           <td><span style="color:var(--red);font-size:.75rem;">${f.reason||''}</span></td>
+           <td>${f.ts?new Date(f.ts.seconds*1000).toLocaleDateString('en-IN'):''}</td>
+         </tr>`;}).join('')}
+      </tbody>
+    </table>`}
+  </div>`;
+}
+
+window.approveVerification = async (reqId, uid) => {
+  await updateDoc(doc(db,'verification_requests',reqId),{status:'approved'});
+  await updateDoc(doc(db,'users',uid),{role:'verified',verificationStatus:'approved'});
+  showToast('User verified!');
+  renderAdmin();
+};
+window.rejectVerification = async (reqId, uid) => {
+  await updateDoc(doc(db,'verification_requests',reqId),{status:'rejected'});
+  await updateDoc(doc(db,'users',uid),{verificationStatus:'rejected'});
+  showToast('Request rejected.');
+  renderAdmin();
+};
+
+// ── NOTIFICATIONS ──
+function addNotif(msg){
+  notifications.unshift({msg,time:new Date().toLocaleTimeString()});
+  const b=document.getElementById('notifBadge');
+  b.classList.remove('hidden'); b.textContent=notifications.length;
+  showToast(msg);
+}
+window.toggleNotif=()=>{
+  const p=document.getElementById('notifPanel');
+  p.classList.toggle('hidden');
+  document.getElementById('notifList').innerHTML=notifications.length
+    ?notifications.map(n=>`<div class="notif-item"><div class="notif-dot2"></div><div><p>${n.msg}</p><time>${n.time}</time></div></div>`).join('')
+    :'<div class="notif-empty">No notifications</div>';
+};
+window.clearNotifs=()=>{
+  notifications=[];
+  document.getElementById('notifBadge').classList.add('hidden');
+  document.getElementById('notifPanel').classList.add('hidden');
+};
+
+// ── TOAST ──
+// — TOAST —
+window.showToast=(msg)=>{
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.remove('hidden');
+    clearTimeout(window._tt);
+    window._tt=setTimeout(()=>t.classList.add('hidden'),3200);
+};
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => {
+    toast.classList.add('hidden');
+  }, 2500);
+}
+</script>
+</body>
+</html>
