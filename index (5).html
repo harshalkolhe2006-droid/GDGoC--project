@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MealMatch — Eat Safe. Eat Well.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+/* ═══════════════════════ TOKENS ═══════════════════════ */
+[data-theme="dark"] {
+  --bg:#080c10; --bg2:#0d1117; --surface:#111720; --card:#161d28;
+  --card-hover:#1c2535; --border:rgba(255,255,255,0.07);
+  --border-h:rgba(255,255,255,0.14); --text:#eef1f7; --text2:#8a95ad;
+  --text3:#3d4a63; --accent:#00e5a0; --accent-dim:rgba(0,229,160,0.12);
+  --accent-glow:rgba(0,229,160,0.25); --danger:#ff6b6b; --warn:#ffd166;
+  --info:#4cc9f0; --purple:#c084fc; --orange:#fb923c;
+  --shadow:0 8px 32px rgba(0,0,0,0.5); --shadow-lg:0 20px 60px rgba(0,0,0,0.7);
+  --glass:rgba(8,12,16,0.88);
+}
+[data-theme="light"] {
+  --bg:#f0f4f8; --bg2:#e6ecf4; --surface:#ffffff; --card:#ffffff;
+  --card-hover:#f7faff; --border:rgba(0,0,0,0.08);
+  --border-h:rgba(0,0,0,0.16); --text:#0f1923; --text2:#5a6882;
+  --text3:#a0aec0; --accent:#00a86b; --accent-dim:rgba(0,168,107,0.1);
+  --accent-glow:rgba(0,168,107,0.22); --danger:#e53e3e; --warn:#c97c00;
+  --info:#2563eb; --purple:#7c3aed; --orange:#ea580c;
+  --shadow:0 8px 32px rgba(0,0,0,0.1); --shadow-lg:0 20px 60px rgba(0,0,0,0.18);
+  --glass:rgba(240,244,248,0.9);
+}
+body.mood-lazy        { --accent:#c084fc; --accent-dim:rgba(192,132,252,0.12); --accent-glow:rgba(192,132,252,0.25); }
+body.mood-adventurous { --accent:#fb923c; --accent-dim:rgba(251,146,60,0.12);  --accent-glow:rgba(251,146,60,0.25);  }
+body.mood-healthy     { --accent:#00e5a0; --accent-dim:rgba(0,229,160,0.12);   --accent-glow:rgba(0,229,160,0.25);   }
+body.mood-budget      { --accent:#ffd166; --accent-dim:rgba(255,209,102,0.12); --accent-glow:rgba(255,209,102,0.25); }
+[data-theme="light"] body.mood-healthy { --accent:#00a86b; }
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .4s,color .4s;line-height:1.6}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:10px}
+
+/* ═══ LOGIN OVERLAY ═══ */
+.login-overlay{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-overlay.hidden{display:none}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:28px;padding:48px 40px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow-lg)}
+.login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;letter-spacing:-.04em;margin-bottom:6px}
+.login-logo span{color:var(--accent)}
+.login-tagline{font-size:.9rem;color:var(--text2);margin-bottom:32px;line-height:1.6}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px 20px;background:white;border:1.5px solid #dadce0;border-radius:14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:.95rem;font-weight:600;color:#3c4043;transition:all .2s;margin-bottom:16px}
+.google-btn:hover{background:#f8f9fa;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.google-btn svg{width:20px;height:20px;flex-shrink:0}
+.login-divider{display:flex;align-items:center;gap:12px;color:var(--text3);font-size:.8rem;margin-bottom:16px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.demo-btn{width:100%;padding:12px;background:var(--accent-dim);border:1px solid var(--accent-glow);color:var(--accent);border-radius:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:.9rem;font-weight:600;transition:all .2s}
+.demo-btn:hover{background:var(--accent);color:#000}
+.login-note{font-size:.72rem;color:var(--text3);margin-top:16px;line-height:1.5}
+
+/* ═══ ONBOARDING OVERLAY ═══ */
+.onboard-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px}
+.onboard-overlay.hidden{display:none}
+.onboard-box{background:var(--card);border:1px solid var(--border);border-radius:28px;padding:40px;max-width:480px;width:100%;box-shadow:var(--shadow-lg)}
+.onboard-step{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.onboard-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.5rem;margin-bottom:6px}
+.onboard-sub{font-size:.88rem;color:var(--text2);margin-bottom:28px}
+.form-group{margin-bottom:18px}
+.form-label{font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:block}
+.form-input{width:100%;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:12px;padding:12px 16px;font-family:'Instrument Sans',sans-serif;font-size:.92rem;outline:none;transition:border-color .2s,box-shadow .2s}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.form-select{width:100%;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:12px;padding:12px 16px;font-family:'Instrument Sans',sans-serif;font-size:.92rem;outline:none;cursor:pointer;appearance:none;transition:border-color .2s}
+.form-select:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}}
+.btn-primary{width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+
+/* ═══ HEADER ═══ */
+.header{position:sticky;top:0;z-index:100;background:var(--glass);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--border);transition:background .4s}
+.header-inner{max-width:1380px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:0 28px;height:68px}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-.04em;color:var(--text);display:flex;align-items:center;text-decoration:none;flex-shrink:0;cursor:pointer}
+.logo-dot{color:var(--accent)}
+.logo-badge{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-glow);padding:3px 10px;border-radius:20px;flex-shrink:0}
+.hdr-space{flex:1}
+.hdr-actions{display:flex;align-items:center;gap:10px}
+.btn-icon{background:var(--surface);border:1px solid var(--border);color:var(--text2);width:40px;height:40px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .2s;flex-shrink:0}
+.btn-icon:hover{background:var(--card-hover);border-color:var(--border-h);color:var(--text)}
+.btn-fav{background:var(--surface);border:1px solid var(--border);color:var(--text2);padding:0 16px;height:40px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Instrument Sans',sans-serif;font-size:.85rem;font-weight:600;transition:all .2s;flex-shrink:0}
+.btn-fav:hover{background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.3);color:var(--danger)}
+.fav-badge{background:var(--danger);color:#fff;width:20px;height:20px;border-radius:50%;font-size:.7rem;font-weight:700;display:none;align-items:center;justify-content:center}
+.fav-badge.on{display:flex}
+/* User avatar in header */
+.user-avatar{width:38px;height:38px;border-radius:50%;border:2px solid var(--accent);object-fit:cover;cursor:pointer;flex-shrink:0}
+.user-avatar-fallback{width:38px;height:38px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;flex-shrink:0;font-weight:700;color:var(--accent)}
+/* Nav tabs */
+.nav-tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px}
+.nav-tab{padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text2);border:none;background:none;font-family:'Instrument Sans',sans-serif;transition:all .2s}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.on{background:var(--accent-dim);color:var(--accent)}
+
+/* ═══ HERO ═══ */
+.hero{max-width:1380px;margin:0 auto;padding:56px 28px 40px;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:start}
+@media(max-width:768px){.hero{grid-template-columns:1fr;gap:24px;padding:32px 20px 28px}}
+.hero-eyebrow{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.hero-eyebrow::before{content:'';width:24px;height:2px;background:var(--accent);border-radius:2px}
+.hero-title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(2.2rem,5vw,3.8rem);line-height:1.05;letter-spacing:-.04em;margin-bottom:14px}
+.hero-title em{font-style:italic;color:var(--accent)}
+.hero-sub{color:var(--text2);font-size:1rem;max-width:440px;line-height:1.65;margin-bottom:24px}
+.cond-pills{display:flex;flex-wrap:wrap;gap:8px}
+.cond-pill{background:var(--surface);border:1px solid var(--border);color:var(--text2);padding:6px 14px;border-radius:24px;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .2s;user-select:none}
+.cond-pill:hover{border-color:var(--accent);color:var(--accent)}
+.cond-pill.on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.surprise-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0}
+.surprise-btn{position:relative;cursor:pointer;border:none;padding:20px 34px;border-radius:20px;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:#000;overflow:hidden;white-space:nowrap;background:linear-gradient(135deg,#00e5a0,#4cc9f0,#c084fc,#fb923c,#ffd166,#00e5a0);background-size:400% 400%;animation:rg 4s linear infinite;box-shadow:0 0 40px rgba(0,229,160,.3);transition:transform .2s,box-shadow .2s}
+.surprise-btn:hover{transform:scale(1.04);box-shadow:0 0 60px rgba(0,229,160,.5)}
+.surprise-btn.shk{animation:rg 4s linear infinite,shk .5s ease}
+@keyframes rg{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+@keyframes shk{0%,100%{transform:rotate(0) scale(1.04)}25%{transform:rotate(-3deg) scale(1.06)}75%{transform:rotate(3deg) scale(1.06)}}
+.surprise-hint{font-size:.72rem;color:var(--text3);text-align:center}
+
+/* ═══ PROFILE BANNER ═══ */
+.profile-banner{max-width:1380px;margin:0 auto 0;padding:0 28px 28px}
+.profile-card-strip{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.profile-avatar-lg{width:52px;height:52px;border-radius:50%;border:2.5px solid var(--accent);object-fit:cover;flex-shrink:0}
+.profile-avatar-fallback{width:52px;height:52px;border-radius:50%;background:var(--accent-dim);border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;color:var(--accent);flex-shrink:0}
+.profile-info{flex:1;min-width:0}
+.profile-greeting{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem}
+.profile-details{font-size:.78rem;color:var(--text2);margin-top:2px}
+.profile-condition-badge{background:var(--accent-dim);border:1px solid var(--accent-glow);color:var(--accent);padding:4px 14px;border-radius:20px;font-size:.75rem;font-weight:600;flex-shrink:0}
+
+/* ═══ FILTERS ═══ */
+.filters{max-width:1380px;margin:0 auto;padding:0 28px 36px;display:grid;gap:18px}
+@media(max-width:768px){.filters{padding:0 20px 28px}}
+.fcard{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px;transition:background .4s}
+.flabel{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.flabel-a{color:var(--accent)}
+.ing-box{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-height:52px;cursor:text;transition:border-color .25s,box-shadow .25s}
+.ing-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim),0 0 20px var(--accent-glow)}
+.ing-input{background:none;border:none;outline:none;color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:.9rem;flex:1;min-width:140px}
+.ing-input::placeholder{color:var(--text3)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 12px;border-radius:20px;font-size:.78rem;font-weight:500;animation:cpop .2s cubic-bezier(.34,1.56,.64,1);flex-shrink:0}
+.chip.safe{background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:#00e5a0}
+.chip.bad{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.3);color:#ff6b6b}
+[data-theme="light"] .chip.safe{color:#007a52}[data-theme="light"] .chip.bad{color:#c0392b}
+@keyframes cpop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.chip-x{background:none;border:none;color:inherit;cursor:pointer;font-size:.95rem;opacity:.6;line-height:1;padding:0;transition:opacity .15s}
+.chip-x:hover{opacity:1}
+.mic-btn{background:var(--bg);border:1.5px solid var(--border);color:var(--text3);border-radius:10px;cursor:pointer;padding:7px 12px;display:flex;align-items:center;gap:6px;font-size:.82rem;font-family:'Instrument Sans',sans-serif;transition:all .2s;flex-shrink:0}
+.mic-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mic-btn.rec{border-color:var(--danger);color:var(--danger);animation:mp 1s infinite}
+@keyframes mp{0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,.4)}50%{box-shadow:0 0 0 6px rgba(255,107,107,0)}}
+.waves{display:none;align-items:flex-end;gap:2px;height:16px}
+.mic-btn.rec .waves{display:flex}
+.wv{width:3px;border-radius:2px;background:var(--danger);animation:wva .6s ease-in-out infinite alternate}
+.wv:nth-child(1){height:4px;animation-delay:0s}.wv:nth-child(2){height:10px;animation-delay:.1s}.wv:nth-child(3){height:16px;animation-delay:.2s}.wv:nth-child(4){height:10px;animation-delay:.1s}.wv:nth-child(5){height:4px;animation-delay:0s}
+@keyframes wva{to{height:16px}}
+.al-hint{font-size:.73rem;color:var(--text3);margin-top:8px}
+.al-hint b{color:var(--danger)}
+.al-grid{display:flex;flex-wrap:wrap;gap:8px}
+.al-btn{background:var(--card);border:1.5px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:24px;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .2s;user-select:none}
+.al-btn:hover{border-color:var(--danger);color:var(--danger)}
+.al-btn.on{background:rgba(255,107,107,.12);border-color:var(--danger);color:var(--danger)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+.time-head{display:flex;justify-content:space-between;align-items:center}
+.time-v{font-size:.9rem;font-weight:600;color:var(--accent)}
+.slider-wrap{margin:10px 0 18px}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:5px;background:var(--card);cursor:pointer;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);cursor:pointer;box-shadow:0 0 0 2px var(--accent);transition:box-shadow .2s}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 6px var(--accent-dim)}
+.slider-marks{display:flex;justify-content:space-between}
+.sm{font-size:.67rem;color:var(--text3)}
+.time-label{font-size:.78rem;color:var(--text2);margin-top:6px}
+.time-label b{color:var(--text)}
+.diet-grid{display:flex;flex-wrap:wrap;gap:8px}
+.diet-btn{background:var(--card);border:1.5px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:24px;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .2s;user-select:none}
+.diet-btn:hover{border-color:var(--accent);color:var(--accent)}
+.diet-btn.on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.mood-row{display:flex;flex-wrap:wrap;gap:10px}
+.mood-btn{background:var(--card);border:1.5px solid var(--border);color:var(--text2);padding:10px 20px;border-radius:14px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .25s;user-select:none}
+.mood-btn:hover{color:var(--text);border-color:var(--border-h)}
+.mood-btn.on[data-mood=healthy]    {background:rgba(0,229,160,.12);border-color:#00e5a0;color:#00e5a0}
+.mood-btn.on[data-mood=lazy]       {background:rgba(192,132,252,.12);border-color:#c084fc;color:#c084fc}
+.mood-btn.on[data-mood=adventurous]{background:rgba(251,146,60,.12);border-color:#fb923c;color:#fb923c}
+.mood-btn.on[data-mood=budget]     {background:rgba(255,209,102,.12);border-color:#ffd166;color:#ffd166}
+[data-theme="light"] .mood-btn.on[data-mood=healthy]{color:#007a52;border-color:#00a86b}
+
+/* ═══ STATUS + RESULTS ═══ */
+.status-bar{max-width:1380px;margin:0 auto;padding:0 28px 10px;display:flex;align-items:center;gap:10px;font-size:.75rem;color:var(--text3)}
+@media(max-width:768px){.status-bar{padding:0 20px 8px}}
+.api-dot{width:7px;height:7px;border-radius:50%;background:var(--warn);flex-shrink:0;animation:dp 2s infinite}
+.api-dot.live{background:var(--accent)}
+@keyframes dp{0%,100%{opacity:1}50%{opacity:.3}}
+.results-bar{max-width:1380px;margin:0 auto;padding:0 28px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media(max-width:768px){.results-bar{padding:0 20px 14px}}
+.res-count{font-size:.85rem;color:var(--text2)}
+.res-count b{color:var(--text);font-size:1rem;font-weight:700}
+.undo-btn{background:rgba(255,209,102,.12);border:1px solid rgba(255,209,102,.3);color:var(--warn);padding:8px 16px;border-radius:20px;font-family:'Instrument Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;display:none;align-items:center;gap:6px;transition:all .2s}
+.undo-btn.on{display:flex}
+.undo-btn:hover{background:rgba(255,209,102,.2)}
+
+/* ═══ GRID ═══ */
+.grid-wrap{max-width:1380px;margin:0 auto;padding:0 28px 80px}
+@media(max-width:768px){.grid-wrap{padding:0 20px 60px}}
+.recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:22px}
+.sk-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.sk{background:var(--surface);animation:skim 1.5s infinite;border-radius:6px}
+@keyframes skim{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* ═══ RECIPE CARD ═══ */
+.recipe-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;cursor:pointer;position:relative;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,border-color .25s;animation:fup .4s ease both;touch-action:pan-y;will-change:transform}
+@keyframes fup{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.recipe-card:hover{transform:translateY(-10px) scale(1.01);box-shadow:var(--shadow-lg);border-color:var(--border-h)}
+.recipe-card.spot{border-color:var(--warn)!important;box-shadow:0 0 0 3px rgba(255,209,102,.25),var(--shadow-lg)!important}
+.cimg{position:relative;height:188px;overflow:hidden;background:var(--surface)}
+.cimg img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease;display:block}
+.recipe-card:hover .cimg img{transform:scale(1.1)}
+.cimg-fall{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3.5rem;background:linear-gradient(135deg,var(--surface),var(--bg))}
+.steam-wrap{position:absolute;bottom:0;left:50%;transform:translateX(-50%);display:flex;gap:10px;opacity:0;transition:opacity .3s;pointer-events:none}
+.recipe-card:hover .steam-wrap{opacity:1}
+.steam{border-radius:4px;background:rgba(255,255,255,.15);animation:su 1.8s ease-in-out infinite}
+.steam:nth-child(1){width:8px;height:24px;animation-delay:0s}
+.steam:nth-child(2){width:8px;height:32px;animation-delay:.3s}
+.steam:nth-child(3){width:8px;height:20px;animation-delay:.6s}
+@keyframes su{0%{transform:translateY(0) scaleX(1);opacity:.7}100%{transform:translateY(-44px) scaleX(.2);opacity:0}}
+.heart-btn{position:absolute;top:12px;right:12px;background:rgba(8,12,16,.75);border:none;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s;z-index:2;backdrop-filter:blur(8px)}
+.heart-btn:hover{transform:scale(1.2)}
+.heart-btn.fv{background:rgba(255,107,107,.3)}
+[data-theme="light"] .heart-btn{background:rgba(255,255,255,.8)}
+.swipe-fav,.swipe-hide{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;font-size:2.5rem;opacity:0;pointer-events:none;border-radius:20px;transition:opacity .15s}
+.swipe-fav{background:rgba(0,229,160,.25)}
+.swipe-hide{background:rgba(255,107,107,.25)}
+.cbody{padding:18px}
+.cname{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;letter-spacing:-.02em;line-height:1.3;margin-bottom:10px}
+.ctags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.ctag{background:var(--surface);border:1px solid var(--border);color:var(--text3);padding:3px 9px;border-radius:10px;font-size:.68rem}
+.ctag.d{background:var(--accent-dim);border-color:var(--accent-glow);color:var(--accent)}
+.conf-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.cring{position:relative;width:52px;height:52px;flex-shrink:0}
+.cring svg{width:52px;height:52px;transform:rotate(-90deg)}
+.cbg{fill:none;stroke:var(--border);stroke-width:4}
+.carc{fill:none;stroke-width:4;stroke-linecap:round;stroke-dasharray:138.2;transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1),stroke .4s}
+.cemoji{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.1rem;line-height:1}
+.ctext{font-size:.78rem;color:var(--text2);line-height:1.5}
+.ctext strong{color:var(--text);font-size:.9rem;display:block}
+.cfoot{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:8px;font-size:.72rem;font-weight:500;position:relative;cursor:default}
+.b-easy{background:rgba(0,229,160,.1);color:var(--accent)}
+.b-med{background:rgba(255,209,102,.1);color:var(--warn)}
+.b-hard{background:rgba(255,107,107,.1);color:var(--danger)}
+.b-cal{background:rgba(76,201,240,.1);color:var(--info)}
+.b-time{background:rgba(192,132,252,.1);color:var(--purple)}
+[data-theme="light"] .b-easy{color:#007a52}[data-theme="light"] .b-med{color:#c97c00}[data-theme="light"] .b-hard{color:#c0392b}
+.tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border-h);border-radius:10px;padding:8px 12px;font-size:.72rem;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;color:var(--text);box-shadow:var(--shadow)}
+.badge:hover .tip{opacity:1}
+
+/* ═══ MONSTER ═══ */
+.monster{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 28px;text-align:center;animation:flt 3.5s ease-in-out infinite}
+.monster.on{display:flex}
+@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+.monster-em{font-size:5rem;margin-bottom:20px;display:block}
+.mbubble{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px 28px;font-size:.95rem;color:var(--text2);max-width:320px;position:relative;margin-bottom:8px}
+.mbubble::after{content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);border:10px solid transparent;border-bottom-color:var(--surface)}
+.msub{font-size:.78rem;color:var(--text3)}
+
+/* ═══ FAV PANEL ═══ */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:200;display:none;opacity:0;transition:opacity .3s}
+.backdrop.on{display:block;opacity:1}
+.fav-panel{position:fixed;top:0;right:-460px;width:440px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:201;transition:right .4s cubic-bezier(.34,1.56,.64,1);overflow-y:auto;display:flex;flex-direction:column}
+.fav-panel.on{right:0}
+@media(max-width:500px){.fav-panel{width:100%;right:-100%}}
+.fp-head{padding:24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+.fp-head h2{font-family:'Syne',sans-serif;font-weight:700;font-size:1.3rem}
+.fp-body{padding:20px;flex:1}
+.fav-item{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;transition:border-color .2s}
+.fav-item:hover{border-color:var(--border-h)}
+.fav-thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.6rem;overflow:hidden}
+.fav-thumb img{width:100%;height:100%;object-fit:cover}
+.fav-info{flex:1;min-width:0}
+.fav-name{font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fav-sub{font-size:.72rem;color:var(--text2);margin-top:3px}
+.fav-rm{background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;transition:color .2s;flex-shrink:0}
+.fav-rm:hover{color:var(--danger)}
+.fav-empty{text-align:center;color:var(--text2);padding:48px 0;font-size:.9rem;line-height:2}
+
+/* ═══ RECIPE DETAIL MODAL ═══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.on{display:flex}
+.recipe-modal{background:var(--card);border:1px solid var(--border);border-radius:24px;width:100%;max-width:700px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.rm-img{width:100%;height:240px;object-fit:cover;border-radius:24px 24px 0 0;display:block}
+.rm-img-fall{width:100%;height:240px;display:flex;align-items:center;justify-content:center;font-size:5rem;background:linear-gradient(135deg,var(--surface),var(--bg));border-radius:24px 24px 0 0}
+.rm-body{padding:28px}
+.rm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.rm-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-.03em;line-height:1.2}
+.rm-close{background:var(--surface);border:1px solid var(--border);color:var(--text2);width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.rm-close:hover{background:var(--card-hover);color:var(--text)}
+.rm-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.rm-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px}
+.rm-section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:12px;color:var(--accent)}
+.rm-nutrition{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+.rm-nut-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.rm-nut-val{font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;color:var(--accent)}
+.rm-nut-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-top:2px}
+.rm-ingredients{margin-bottom:24px}
+.rm-ing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:480px){.rm-ing-grid{grid-template-columns:1fr}}
+.rm-ing-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:.85rem;display:flex;align-items:center;gap:8px}
+.rm-ing-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.rm-steps{counter-reset:step}
+.rm-step{display:flex;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);font-size:.88rem;color:var(--text2);line-height:1.6}
+.rm-step:last-child{border-bottom:none;margin-bottom:0}
+.rm-step-num{background:var(--accent-dim);border:1px solid var(--accent-glow);color:var(--accent);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;flex-shrink:0;margin-top:1px}
+.rm-yt-btn{display:flex;align-items:center;gap:10px;width:100%;padding:14px;background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.25);border-radius:14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:.9rem;font-weight:600;color:#ff4444;transition:all .2s;margin-top:20px;text-decoration:none;justify-content:center}
+.rm-yt-btn:hover{background:rgba(255,0,0,.2)}
+
+/* ═══ MEAL PLANNER PAGE ═══ */
+.page{max-width:1380px;margin:0 auto;padding:0 28px 80px;display:none}
+.page.on{display:block}
+.page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;letter-spacing:-.04em;margin-bottom:6px;padding-top:48px}
+.page-sub{color:var(--text2);font-size:.95rem;margin-bottom:32px}
+.planner-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.btn-regen{background:var(--accent);color:#000;border:none;padding:12px 24px;border-radius:14px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s}
+.btn-regen:hover{opacity:.85;transform:translateY(-1px)}
+.planner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.day-header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.day-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem}
+.day-date{font-size:.72rem;color:var(--text3)}
+.day-meals{padding:14px}
+.meal-slot{margin-bottom:12px}
+.meal-slot:last-child{margin-bottom:0}
+.meal-type{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.meal-card-mini{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .2s}
+.meal-card-mini:hover{border-color:var(--border-h);transform:translateY(-2px)}
+.meal-mini-img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.2rem;overflow:hidden}
+.meal-mini-img img{width:100%;height:100%;object-fit:cover}
+.meal-mini-name{font-size:.82rem;font-weight:600;line-height:1.3;flex:1;min-width:0}
+.meal-mini-cal{font-size:.72rem;color:var(--accent);flex-shrink:0}
+.planner-empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.planner-empty p:first-child{font-size:3rem;margin-bottom:12px}
+.planner-empty p:last-child{font-size:.9rem}
+
+/* ═══ SETTINGS MODAL ═══ */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.settings-overlay.on{display:flex}
+.settings-box{background:var(--card);border:1px solid var(--border);border-radius:24px;width:100%;max-width:460px;padding:36px;box-shadow:var(--shadow-lg)}
+.settings-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.settings-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem}
+
+/* ═══ TOAST ═══ */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--border-h);border-radius:40px;padding:12px 24px;font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:10px;z-index:9000;box-shadow:var(--shadow);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.cf{position:fixed;pointer-events:none;z-index:9999;border-radius:2px;animation:cf linear forwards}
+@keyframes cf{0%{transform:translateY(-100px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+footer{background:var(--surface);border-top:1px solid var(--border);padding:32px 28px;text-align:center;color:var(--text2);font-size:.8rem;line-height:2;transition:background .4s}
+footer b{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN OVERLAY ═══ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">Meal<span>.</span>Match</div>
+    <p class="login-tagline">Your personal dietary companion.<br>Safe recipes for your health condition.</p>
+    <!-- Real Google Sign-In button rendered here -->
+    <div id="googleSignInDiv" style="display:flex;justify-content:center;margin-bottom:16px"></div>
+    <div class="login-divider">or</div>
+    <button class="demo-btn" id="demoLoginBtn">Continue as Guest (Demo)</button>
+    <p class="login-note">🔒 Your health data is stored only on your device and never shared.</p>
+  </div>
+</div>
+
+<!-- ═══ ONBOARDING OVERLAY ═══ -->
+<div class="onboard-overlay hidden" id="onboardOverlay">
+  <div class="onboard-box">
+    <div class="onboard-step">Step 2 of 2 — Your Health Profile</div>
+    <h2 class="onboard-title">Tell us about yourself</h2>
+    <p class="onboard-sub">We use this to personalise recipes and your meal plan.</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input" id="ob-name" placeholder="Your name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Age</label>
+        <input class="form-input" id="ob-age" type="number" min="1" max="120" placeholder="e.g. 21" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Gender</label>
+      <select class="form-select" id="ob-gender">
+        <option value="">Select gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Non-binary">Non-binary</option>
+        <option value="Prefer not to say">Prefer not to say</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Health Condition / Dietary Need</label>
+      <select class="form-select" id="ob-disease">
+        <option value="">Select condition</option>
+        <option value="Diabetic">🩺 Diabetes</option>
+        <option value="Gluten Free">🌾 Celiac / Gluten Intolerance</option>
+        <option value="Low-Salt">🫀 Low Sodium / Heart Condition</option>
+        <option value="Dairy Free">🥛 Dairy Intolerance / Lactose</option>
+        <option value="Vegan">🌱 Vegan</option>
+        <option value="Vegetarian">🥦 Vegetarian</option>
+        <option value="">No specific condition</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="saveProfileBtn">Save & Start Cooking →</button>
+  </div>
+</div>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo" onclick="showPage('home')">Meal<span class="logo-dot">.</span>Match</div>
+    <div class="logo-badge">🛡 Health-Safe</div>
+    <div class="hdr-space"></div>
+    <!-- Nav tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab on" data-page="home" onclick="showPage('home')">🍽 Recipes</button>
+      <button class="nav-tab" data-page="planner" onclick="showPage('planner')">📅 Meal Plan</button>
+    </div>
+    <div class="hdr-actions">
+      <button class="btn-icon" id="themeBtn" title="Toggle light/dark">🌙</button>
+      <button class="btn-fav" id="favBtn">❤️ Saved <span class="fav-badge" id="favBadge">0</span></button>
+      <button class="btn-icon" id="settingsBtn" title="Settings">⚙️</button>
+      <div id="userAvatarWrap"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ HOME PAGE ═══ -->
+<div id="homePage">
+  <!-- Profile banner (shown when logged in) -->
+  <div class="profile-banner" id="profileBanner" style="display:none">
+    <div class="profile-card-strip">
+      <div id="profileAvatarLg"></div>
+      <div class="profile-info">
+        <div class="profile-greeting" id="profileGreeting">Welcome back!</div>
+        <div class="profile-details" id="profileDetails"></div>
+      </div>
+      <span class="profile-condition-badge" id="profileCondBadge" style="display:none"></span>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <div class="hero-eyebrow">Dietary Intelligence</div>
+      <h1 class="hero-title">Eat Safe.<br><em>Eat Well.</em> Always.</h1>
+      <p class="hero-sub">Intelligent recipes for diabetes, celiac, IBS, allergies & more — every meal precisely filtered for your body.</p>
+      <div class="cond-pills">
+        <span class="cond-pill" data-d="Diabetic">🩺 Diabetic</span>
+        <span class="cond-pill" data-d="Gluten Free">🌾 Gluten-Free</span>
+        <span class="cond-pill" data-d="Vegan">🌱 Vegan</span>
+        <span class="cond-pill" data-d="Vegetarian">🥦 Vegetarian</span>
+        <span class="cond-pill" data-d="Low-Salt">🫀 Low Sodium</span>
+        <span class="cond-pill" data-d="Dairy Free">🥛 Dairy-Free</span>
+      </div>
+    </div>
+    <div class="surprise-wrap">
+      <button class="surprise-btn" id="surpriseBtn">🎲 Surprise Me!</button>
+      <div class="surprise-hint">Random healthy pick</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="fcard">
+      <div class="flabel"><span class="flabel-a">🧪</span> Ingredient Aura — What's in your pantry?</div>
+      <div class="ing-box" id="ingBox" onclick="document.getElementById('ingInput').focus()">
+        <div id="chips" style="display:contents"></div>
+        <input id="ingInput" class="ing-input" placeholder="Type an ingredient + Enter  (e.g. chicken, oats, spinach…)" autocomplete="off">
+        <div class="waves"><div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div></div>
+        <button class="mic-btn" id="micBtn">🎤 <span id="micLabel">Voice</span></button>
+      </div>
+      <div class="al-hint">🟢 Green = safe &nbsp;|&nbsp; <b>🔴 Red = known allergen</b> &nbsp;|&nbsp; Press Enter or comma to add</div>
+    </div>
+
+    <div class="fcard">
+      <div class="flabel"><span class="flabel-a">⚠️</span> My Allergens — Always Excluded</div>
+      <div class="al-grid">
+        <button class="al-btn" data-al="gluten">🌾 Gluten/Wheat</button>
+        <button class="al-btn" data-al="dairy">🥛 Dairy</button>
+        <button class="al-btn" data-al="egg">🥚 Eggs</button>
+        <button class="al-btn" data-al="nut">🥜 Tree Nuts</button>
+        <button class="al-btn" data-al="peanut">Peanuts</button>
+        <button class="al-btn" data-al="shellfish">🦐 Shellfish</button>
+        <button class="al-btn" data-al="soy">Soy</button>
+        <button class="al-btn" data-al="sugar">🍬 High Sugar</button>
+        <button class="al-btn" data-al="nightshade">🍅 Nightshades</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="fcard">
+        <div class="flabel time-head">
+          <span><span class="flabel-a">⏱</span> Max Cook Time</span>
+          <span class="time-v" id="timeV">60 min</span>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="timeSlider" min="5" max="120" value="60" step="5">
+          <div class="slider-marks"><span class="sm">5m</span><span class="sm">30m</span><span class="sm">60m</span><span class="sm">90m</span><span class="sm">120m</span></div>
+        </div>
+        <div class="time-label" id="timeLabel">Loading…</div>
+      </div>
+
+      <div class="fcard">
+        <div class="flabel"><span class="flabel-a">🥗</span> Dietary Filter</div>
+        <div class="diet-grid">
+          <button class="diet-btn" data-d="Vegetarian">🥦 Vegetarian</button>
+          <button class="diet-btn" data-d="Vegan">🌱 Vegan</button>
+          <button class="diet-btn" data-d="Gluten Free">🌾 Gluten-Free</button>
+          <button class="diet-btn" data-d="Dairy Free">🥛 Dairy-Free</button>
+          <button class="diet-btn" data-d="Low-Salt">🫀 Low Sodium</button>
+          <button class="diet-btn" data-d="High-Protein">💪 High Protein</button>
+          <button class="diet-btn" data-d="Diabetic">🩺 Diabetic</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="fcard">
+      <div class="flabel"><span class="flabel-a">🎭</span> Mood Sort</div>
+      <div class="mood-row">
+        <button class="mood-btn" data-mood="healthy">😇 Healthy</button>
+        <button class="mood-btn" data-mood="lazy">😴 Lazy (Quick)</button>
+        <button class="mood-btn" data-mood="adventurous">🌍 Adventurous</button>
+        <button class="mood-btn" data-mood="budget">💰 Budget</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiTxt">Connecting to TheMealDB…</span>
+  </div>
+
+  <div class="results-bar">
+    <div class="res-count"><b id="visCount">0</b> recipes found</div>
+    <button class="undo-btn" id="undoBtn">↩ Undo</button>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="monster" id="monster">
+      <span class="monster-em" id="monsterEm">🧟</span>
+      <div class="mbubble" id="monsterMsg">No recipes found — try removing a filter!</div>
+      <div class="msub">The pantry monster is hungry too 😅</div>
+    </div>
+    <div class="recipe-grid" id="grid"></div>
+  </div>
+</div>
+
+<!-- ═══ MEAL PLANNER PAGE ═══ -->
+<div class="page" id="plannerPage">
+  <div class="page-title">📅 Your Weekly Meal Plan</div>
+  <div class="page-sub" id="plannerSub">7-day personalised plan based on your health condition.</div>
+  <div class="planner-actions">
+    <button class="btn-regen" id="regenPlanBtn">🔄 Regenerate Plan</button>
+    <span style="font-size:.82rem;color:var(--text3)" id="plannerCondLabel"></span>
+  </div>
+  <div id="plannerGrid" class="planner-grid"></div>
+</div>
+
+<!-- ═══ BACKDROP + PANELS ═══ -->
+<div class="backdrop" id="backdrop"></div>
+<div class="fav-panel" id="favPanel">
+  <div class="fp-head">
+    <h2>❤️ Saved Recipes</h2>
+    <button class="btn-icon" id="closePanel">✕</button>
+  </div>
+  <div class="fp-body" id="favBody"></div>
+</div>
+
+<!-- ═══ RECIPE DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="recipeModal">
+  <div class="recipe-modal" id="recipeModalInner">
+    <div id="recipeModalContent">Loading…</div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="settings-overlay" id="settingsModal">
+  <div class="settings-box">
+    <div class="settings-head">
+      <h2 class="settings-title">⚙️ Edit Profile</h2>
+      <button class="btn-icon" id="closeSettings">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input" id="set-name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Age</label>
+        <input class="form-input" id="set-age" type="number" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Gender</label>
+      <select class="form-select" id="set-gender">
+        <option value="">Select</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Non-binary">Non-binary</option>
+        <option value="Prefer not to say">Prefer not to say</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Health Condition</label>
+      <select class="form-select" id="set-disease">
+        <option value="">No specific condition</option>
+        <option value="Diabetic">🩺 Diabetes</option>
+        <option value="Gluten Free">🌾 Celiac / Gluten Intolerance</option>
+        <option value="Low-Salt">🫀 Low Sodium / Heart Condition</option>
+        <option value="Dairy Free">🥛 Dairy Intolerance</option>
+        <option value="Vegan">🌱 Vegan</option>
+        <option value="Vegetarian">🥦 Vegetarian</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="saveSettingsBtn">Save Changes</button>
+    <button style="width:100%;padding:12px;background:none;border:1px solid var(--border);color:var(--danger);border-radius:12px;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-weight:600;margin-top:10px;transition:all .2s" id="logoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <b>MealMatch</b> — Your dietary companion. Live recipes from <b>TheMealDB</b>.<br>
+  <small style="opacity:.5">All filtering is local. Your health data never leaves your device.</small>
+</footer>
+
+<script>
+// ════════════════════════════════════════════════
+//  MEALMATCH — Complete App
+// ════════════════════════════════════════════════
+
+// ─── CONFIG ─────────────────────────────────────
+// To enable real Google Sign-In:
+// 1. Go to console.cloud.google.com
+// 2. Create a project → Enable Google+ API
+// 3. Create OAuth 2.0 credentials (Web Application)
+// 4. Add your domain to Authorized JavaScript origins
+// 5. Replace 'YOUR_GOOGLE_CLIENT_ID' below with your Client ID
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
+
+// ─── STATE ──────────────────────────────────────
+let recipes=[], ings=[], blocked=[], diets=[], maxT=60, mood='healthy';
+let favs=[], hidden=[], lastSwipe=null, visIds=[];
+let currentUser=null, userProfile=null;
+let weeklyPlan=null;
+
+try{favs=JSON.parse(localStorage.getItem('mm_favs')||'[]')}catch(e){favs=[]}
+try{hidden=JSON.parse(localStorage.getItem('mm_hid')||'[]')}catch(e){hidden=[]}
+mood=localStorage.getItem('mm_mood')||'healthy';
+
+// ─── ALLERGEN MAP ────────────────────────────────
+const ALLERGEN={
+  gluten:['wheat','flour','bread','pasta','barley','rye','couscous','bulgur','gluten','naan','tortilla','pita','semolina','breadcrumb','batter'],
+  dairy:['milk','cheese','butter','cream','yogurt','ghee','paneer','curd','mozzarella','parmesan','lactose','whey','brie','cheddar'],
+  egg:['egg','mayo','mayonnaise','meringue'],
+  nut:['almond','cashew','walnut','pecan','hazelnut','pistachio','macadamia','pine nut'],
+  peanut:['peanut','groundnut'],
+  shellfish:['shrimp','crab','lobster','prawn','scallop','clam','oyster','mussel'],
+  soy:['soy','tofu','tempeh','edamame','miso'],
+  sugar:['sugar','syrup','honey','jaggery','candy','caramel'],
+  nightshade:['tomato','pepper','eggplant','potato','paprika','chili','capsicum','aubergine']
+};
+const ALLERGEN_FLAT=Object.values(ALLERGEN).flat();
+const MONSTER_MSGS=['No recipes found — try removing a filter!','The pantry is bare… add some ingredients!','Even monsters need food. Loosen those filters?','Nothing matches! Try a different mood?','Uh oh — widen the time range?'];
+const EMOJIS=['🧟','👾','🤖','👻','🦖','🐙'];
+
+// ─── GLUTEN / DAIRY / LOW-SALT DETECTION ────────
+// BUG FIX: TheMealDB rarely tags recipes correctly for these.
+// We detect them from actual ingredients instead.
+const GLUTEN_WORDS=['wheat','flour','bread','pasta','barley','rye','couscous','bulgur','naan','pita','semolina','breadcrumb','tortilla','dumpling','batter','crouton','cracker','bun','roll','dough'];
+const DAIRY_WORDS=['milk','cheese','butter','cream','yogurt','ghee','paneer','curd','mozzarella','parmesan','lactose','whey','brie','cheddar','ricotta','mascarpone','custard'];
+const HIGH_SALT_WORDS=['soy sauce','fish sauce','anchovies','anchovy','oyster sauce','worcestershire','miso','salt fish','preserved','brine','pickle'];
+const MEAT_WORDS=['beef','chicken','lamb','pork','fish','shrimp','prawn','turkey','duck','bacon','tuna','salmon','cod','tilapia','crab','lobster','anchovy','sardine'];
+
+// ─── AUTH ────────────────────────────────────────
+function initAuth(){
+  // Check for saved session
+  const saved=localStorage.getItem('mm_user');
+  const savedProfile=localStorage.getItem('mm_profile');
+  if(saved){
+    try{
+      currentUser=JSON.parse(saved);
+      if(savedProfile) userProfile=JSON.parse(savedProfile);
+      hideLogin();
+      if(!userProfile) showOnboarding();
+      else{ renderUserUI(); loadRecipes(); }
+    }catch(e){ showLogin(); }
+  } else {
+    showLogin();
+  }
+
+  // Init Google Sign-In if Client ID is set
+  if(GOOGLE_CLIENT_ID!=='YOUR_GOOGLE_CLIENT_ID'){
+    window.onload=()=>{
+      if(window.google){
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredential,
+        });
+        google.accounts.id.renderButton(
+          document.getElementById('googleSignInDiv'),
+          { theme:'outline', size:'large', width:320, text:'signin_with', logo_alignment:'left' }
+        );
+      }
+    };
+  } else {
+    // Show a disabled Google button with explanation
+    document.getElementById('googleSignInDiv').innerHTML=`
+      <div style="background:#f0f0f0;border:1.5px solid #dadce0;border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:12px;opacity:.6;width:100%;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        <span style="font-size:.9rem;font-weight:600;color:#3c4043">Sign in with Google (needs Client ID)</span>
+      </div>`;
+  }
+}
+
+function handleGoogleCredential(response){
+  // Decode the JWT token from Google
+  const payload=JSON.parse(atob(response.credential.split('.')[1]));
+  currentUser={ name:payload.name, email:payload.email, picture:payload.picture, sub:payload.sub };
+  localStorage.setItem('mm_user',JSON.stringify(currentUser));
+  const savedProfile=localStorage.getItem('mm_profile');
+  hideLogin();
+  if(!savedProfile) showOnboarding();
+  else{ userProfile=JSON.parse(savedProfile); renderUserUI(); loadRecipes(); }
+}
+
+function showLogin(){ document.getElementById('loginOverlay').classList.remove('hidden'); }
+function hideLogin(){ document.getElementById('loginOverlay').classList.add('hidden'); }
+function showOnboarding(){
+  document.getElementById('onboardOverlay').classList.remove('hidden');
+  if(currentUser){ document.getElementById('ob-name').value=currentUser.name||''; }
+}
+
+document.getElementById('demoLoginBtn').addEventListener('click',()=>{
+  currentUser={ name:'Guest', email:'guest@demo.com', picture:null, sub:'demo' };
+  localStorage.setItem('mm_user',JSON.stringify(currentUser));
+  hideLogin();
+  const savedProfile=localStorage.getItem('mm_profile');
+  if(!savedProfile) showOnboarding();
+  else{ userProfile=JSON.parse(savedProfile); renderUserUI(); loadRecipes(); }
+});
+
+document.getElementById('saveProfileBtn').addEventListener('click',()=>{
+  const name=document.getElementById('ob-name').value.trim()||currentUser.name||'Friend';
+  const age=document.getElementById('ob-age').value;
+  const gender=document.getElementById('ob-gender').value;
+  const disease=document.getElementById('ob-disease').value;
+  userProfile={ name, age, gender, disease };
+  localStorage.setItem('mm_profile',JSON.stringify(userProfile));
+  document.getElementById('onboardOverlay').classList.add('hidden');
+  renderUserUI();
+  loadRecipes();
+  toast('🎉 Profile saved! Loading your recipes…');
+});
+
+function renderUserUI(){
+  if(!userProfile) return;
+  // Avatar in header
+  const wrap=document.getElementById('userAvatarWrap');
+  if(currentUser&&currentUser.picture){
+    wrap.innerHTML=`<img class="user-avatar" src="${currentUser.picture}" alt="${currentUser.name}" title="${currentUser.name}" onclick="document.getElementById('settingsModal').classList.add('on')">`;
+  } else {
+    const initials=(userProfile.name||'G').charAt(0).toUpperCase();
+    wrap.innerHTML=`<div class="user-avatar-fallback" onclick="document.getElementById('settingsModal').classList.add('on')" title="Settings">${initials}</div>`;
+  }
+  // Profile banner
+  const banner=document.getElementById('profileBanner');
+  banner.style.display='block';
+  const greet=getGreeting();
+  document.getElementById('profileGreeting').textContent=`${greet}, ${userProfile.name}! 👋`;
+  document.getElementById('profileDetails').textContent=
+    [userProfile.age?`Age ${userProfile.age}`:'', userProfile.gender||'', ''].filter(Boolean).join(' · ') || 'Complete your profile in Settings';
+
+  if(userProfile.disease){
+    const badge=document.getElementById('profileCondBadge');
+    badge.style.display='inline-flex';
+    badge.textContent=`🛡 ${userProfile.disease} diet active`;
+    // Auto-activate the condition filter
+    if(!diets.includes(userProfile.disease)){ diets.push(userProfile.disease); syncDiet(); }
+  }
+
+  // Profile avatar in banner
+  const avatarEl=document.getElementById('profileAvatarLg');
+  if(currentUser&&currentUser.picture){
+    avatarEl.innerHTML=`<img class="profile-avatar-lg" src="${currentUser.picture}" alt="${userProfile.name}">`;
+  } else {
+    const initials=(userProfile.name||'G').charAt(0).toUpperCase();
+    avatarEl.innerHTML=`<div class="profile-avatar-fallback">${initials}</div>`;
+  }
+
+  // Settings modal prefill
+  document.getElementById('set-name').value=userProfile.name||'';
+  document.getElementById('set-age').value=userProfile.age||'';
+  document.getElementById('set-gender').value=userProfile.gender||'';
+  document.getElementById('set-disease').value=userProfile.disease||'';
+}
+
+function getGreeting(){
+  const h=new Date().getHours();
+  if(h<12) return 'Good morning'; if(h<17) return 'Good afternoon'; return 'Good evening';
+}
+
+// ─── SETTINGS ───────────────────────────────────
+document.getElementById('settingsBtn').addEventListener('click',()=>document.getElementById('settingsModal').classList.add('on'));
+document.getElementById('closeSettings').addEventListener('click',()=>document.getElementById('settingsModal').classList.remove('on'));
+document.getElementById('saveSettingsBtn').addEventListener('click',()=>{
+  const name=document.getElementById('set-name').value.trim()||userProfile.name;
+  const age=document.getElementById('set-age').value;
+  const gender=document.getElementById('set-gender').value;
+  const disease=document.getElementById('set-disease').value;
+  userProfile={name,age,gender,disease};
+  localStorage.setItem('mm_profile',JSON.stringify(userProfile));
+  document.getElementById('settingsModal').classList.remove('on');
+  renderUserUI(); renderAll();
+  toast('✅ Profile updated!');
+});
+document.getElementById('logoutBtn').addEventListener('click',()=>{
+  localStorage.removeItem('mm_user'); localStorage.removeItem('mm_profile');
+  localStorage.removeItem('mm_plan');
+  currentUser=null; userProfile=null;
+  document.getElementById('settingsModal').classList.remove('on');
+  document.getElementById('profileBanner').style.display='none';
+  document.getElementById('userAvatarWrap').innerHTML='';
+  diets=[]; syncDiet();
+  showLogin();
+  toast('👋 Signed out');
+});
+
+// ─── PAGE NAVIGATION ────────────────────────────
+function showPage(page){
+  document.getElementById('homePage').style.display=page==='home'?'block':'none';
+  const pp=document.getElementById('plannerPage');
+  if(page==='planner'){ pp.classList.add('on'); renderPlanner(); } else pp.classList.remove('on');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('on',t.dataset.page===page));
+}
+
+// ─── THEME ──────────────────────────────────────
+const savedTheme=localStorage.getItem('mm_theme')||'dark';
+document.documentElement.setAttribute('data-theme',savedTheme);
+document.getElementById('themeBtn').textContent=savedTheme==='dark'?'☀️':'🌙';
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('mm_theme',next);
+  document.getElementById('themeBtn').textContent=next==='dark'?'☀️':'🌙';
+});
+
+// ─── TOAST ──────────────────────────────────────
+let toastT;
+function toast(msg,d=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),d);}
+
+// ─── API + PARSE ─────────────────────────────────
+async function loadRecipes(){
+  setApi(false,'Fetching recipes from TheMealDB…');
+  const grid=document.getElementById('grid');
+  grid.innerHTML=Array(12).fill(`<div class="sk-card"><div class="sk" style="height:188px;border-radius:0"></div><div style="padding:18px;display:flex;flex-direction:column;gap:10px"><div class="sk" style="height:18px;width:70%"></div><div class="sk" style="height:12px;width:50%"></div><div class="sk" style="height:48px;border-radius:12px"></div><div class="sk" style="height:12px;width:40%"></div></div></div>`).join('');
+  const cats=['Chicken','Beef','Seafood','Vegetarian','Pasta','Breakfast','Side','Starter','Vegan','Lamb'];
+  try{
+    const lists=await Promise.all(cats.map(c=>fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${c}`).then(r=>r.json()).then(d=>(d.meals||[]).slice(0,16))));
+    const seen=new Set(),unique=lists.flat().filter(m=>{if(seen.has(m.idMeal))return false;seen.add(m.idMeal);return true;});
+    const details=await Promise.all(unique.slice(0,120).map(m=>fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${m.idMeal}`).then(r=>r.json()).then(d=>d.meals?d.meals[0]:null)));
+    recipes=details.filter(Boolean).map(parseMeal);
+    setApi(true,`✅ Live — ${recipes.length} recipes loaded from TheMealDB`);
+  }catch(e){
+    console.error(e);recipes=getDemo();setApi(false,'⚠️ API unavailable — showing demo recipes');
+  }
+  applyMood();renderAll();
+}
+
+function parseMeal(m){
+  // Build ingredients + measures arrays
+  const ingredients=[],measures=[];
+  for(let i=1;i<=20;i++){
+    const v=(m[`strIngredient${i}`]||'').trim();
+    const ms=(m[`strMeasure${i}`]||'').trim();
+    if(v){ingredients.push(v.toLowerCase());measures.push(ms);}
+  }
+  const instrLen=(m.strInstructions||'').length;
+  const time=Math.min(120,Math.max(10,Math.round(instrLen/120)*5));
+  const cat=(m.strCategory||'').toLowerCase();
+  const tags=(m.strTags||'').toLowerCase();
+  const ds=[];
+
+  // Category-based tags
+  if(cat==='vegetarian'||cat==='vegan')ds.push('Vegetarian');
+  if(cat==='vegan')ds.push('Vegan');
+  if(['seafood','chicken','beef','lamb'].includes(cat))ds.push('High-Protein');
+
+  // Auto vegetarian detection from ingredients
+  if(!ingredients.some(i=>MEAT_WORDS.some(w=>i.includes(w)))&&!ds.includes('Vegetarian'))ds.push('Vegetarian');
+
+  // ─── BUG FIX: ingredient-based detection for the three broken filters ───
+  // Gluten-Free: recipe has NO gluten-containing ingredients
+  const hasGluten=ingredients.some(i=>GLUTEN_WORDS.some(g=>i.includes(g)));
+  if(!hasGluten)ds.push('Gluten Free');
+
+  // Dairy-Free: recipe has NO dairy ingredients
+  const hasDairy=ingredients.some(i=>DAIRY_WORDS.some(d=>i.includes(d)));
+  if(!hasDairy)ds.push('Dairy Free');
+
+  // Low-Salt: recipe has NO high-salt ingredients (reasonable heuristic)
+  const hasHighSalt=ingredients.some(i=>HIGH_SALT_WORDS.some(s=>i.includes(s)));
+  if(!hasHighSalt)ds.push('Low-Salt');
+
+  // Diabetic-friendly: low-carb proxy — no refined carbs or high sugar
+  const diabeticBad=['sugar','syrup','honey','white rice','pasta','bread','potato','flour','noodle','candy','chocolate','dessert'];
+  const hasDiabeticBad=ingredients.some(i=>diabeticBad.some(d=>i.includes(d)))||['dessert','pasta'].includes(cat);
+  if(!hasDiabeticBad&&ds.includes('High-Protein'))ds.push('Diabetic');
+
+  return{
+    id:m.idMeal,
+    name:m.strMeal,
+    img:m.strMealThumb,
+    cat:m.strCategory,
+    area:m.strArea,
+    ings:ingredients,
+    measures,
+    instructions:m.strInstructions||'',
+    youtube:m.strYoutube||'',
+    diets:ds,
+    tags:(m.strTags||'').split(',').map(t=>t.trim()).filter(Boolean),
+    time,
+    cal:150+ingredients.length*18+Math.floor(Math.random()*80),
+    budget:Math.ceil(ingredients.length/4)
+  };
+}
+
+function setApi(live,msg){document.getElementById('apiDot').classList.toggle('live',live);document.getElementById('apiTxt').textContent=msg;}
+
+// ─── RENDER ALL ──────────────────────────────────
+function renderAll(){
+  let rs=[...recipes];
+  if(blocked.length)rs=rs.filter(r=>{const s=r.ings.join(' ');return!blocked.some(al=>(ALLERGEN[al]||[al]).some(kw=>s.includes(kw)));});
+  if(diets.length)rs=rs.filter(r=>diets.every(d=>r.diets.includes(d)));
+  rs=rs.filter(r=>r.time<=maxT);
+  if(ings.length)rs=rs.filter(r=>ings.some(i=>r.ings.some(ri=>ri.includes(i))));
+  rs=rs.filter(r=>!hidden.includes(r.id));
+  sortByMood(rs);
+  visIds=rs.map(r=>r.id);
+  document.getElementById('visCount').textContent=rs.length;
+  const underT=recipes.filter(r=>r.time<=maxT).length;
+  document.getElementById('timeLabel').innerHTML=`<b>${underT}</b> recipes under ${maxT} minutes`;
+  const mon=document.getElementById('monster');
+  mon.classList.toggle('on',rs.length===0&&recipes.length>0);
+  if(rs.length===0)document.getElementById('monsterMsg').textContent=MONSTER_MSGS[Math.floor(Math.random()*MONSTER_MSGS.length)];
+  const grid=document.getElementById('grid');grid.innerHTML='';
+  rs.forEach((r,i)=>{const el=makeCard(r,i);grid.appendChild(el);});
+}
+
+function sortByMood(rs){
+  if(mood==='lazy')rs.sort((a,b)=>a.time-b.time);
+  else if(mood==='adventurous')rs.sort(()=>Math.random()-.5);
+  else if(mood==='healthy')rs.sort((a,b)=>a.cal-b.cal);
+  else if(mood==='budget')rs.sort((a,b)=>a.budget-b.budget);
+}
+
+// ─── CARD ────────────────────────────────────────
+function makeCard(r,idx){
+  const isFav=favs.includes(r.id);
+  const conf=computeConf(r);
+  const diff=r.time<20?'Easy':r.time<=45?'Medium':'Hard';
+  const diffCls=diff==='Easy'?'b-easy':diff==='Medium'?'b-med':'b-hard';
+  const diffEm=diff==='Easy'?'😀':diff==='Medium'?'😐':'😅';
+  const C=138.2,offset=C-(conf/100)*C;
+  const cColor=conf<30?'#ff6b6b':conf<70?'#ffd166':'#00e5a0';
+  const cEmoji=conf<30?'😰':conf<70?'🙂':'😎';
+  const dTags=r.diets.slice(0,2).map(d=>`<span class="ctag d">${d}</span>`).join('');
+  const tTags=r.tags.slice(0,1).map(t=>`<span class="ctag">${t}</span>`).join('');
+  const card=document.createElement('div');
+  card.className='recipe-card';card.dataset.id=r.id;
+  card.style.animationDelay=`${idx*.035}s`;
+  card.innerHTML=`
+    <div class="swipe-fav" id="sf-${r.id}">❤️</div>
+    <div class="swipe-hide" id="sh-${r.id}">👋</div>
+    <div class="cimg">
+      ${r.img?`<img src="${r.img}" alt="${r.name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=cimg-fall>🍽️</div>'">`:`<div class="cimg-fall">🍽️</div>`}
+      <div class="steam-wrap"><div class="steam"></div><div class="steam"></div><div class="steam"></div></div>
+      <button class="heart-btn ${isFav?'fv':''}" data-id="${r.id}">${isFav?'❤️':'🤍'}</button>
+    </div>
+    <div class="cbody">
+      <div class="cname">${r.name}</div>
+      <div class="ctags">${dTags}${tTags}${r.area?`<span class="ctag">📍 ${r.area}</span>`:''}</div>
+      <div class="conf-row">
+        <div class="cring"><svg viewBox="0 0 52 52"><circle class="cbg" cx="26" cy="26" r="22"/><circle class="carc" cx="26" cy="26" r="22" stroke="${cColor}" stroke-dashoffset="${ings.length?offset:C}"/></svg><div class="cemoji">${ings.length?cEmoji:'?'}</div></div>
+        <div class="ctext"><strong>${ings.length?conf+'% pantry match':'Add ingredients'}</strong>${ings.length?(conf<30?'Needs a few key items':conf<70?'Almost there!':'You\'ve got this!'):'to see pantry match score'}</div>
+      </div>
+      <div class="cfoot">
+        <span class="badge ${diffCls}">${diffEm} ${diff}<span class="tip">${diff}: ${r.time}min · ${r.cal} cal/serving</span></span>
+        <span class="badge b-time">⏱ ${r.time}m<span class="tip">Total cook + prep time</span></span>
+        <span class="badge b-cal">🔥 ${r.cal}<span class="tip">Estimated calories/serving</span></span>
+      </div>
+    </div>`;
+  card.addEventListener('click',e=>{if(!e.target.closest('.heart-btn'))openRecipeModal(r);});
+  card.querySelector('.heart-btn').addEventListener('click',e=>{e.stopPropagation();toggleFav(r.id,card.querySelector('.heart-btn'),r);});
+  initSwipe(card,r);
+  return card;
+}
+
+function computeConf(r){if(!ings.length)return 0;const m=ings.filter(i=>r.ings.some(ri=>ri.includes(i)));return Math.round((m.length/ings.length)*100);}
+
+// ─── RECIPE DETAIL MODAL ─────────────────────────
+function openRecipeModal(r){
+  const modal=document.getElementById('recipeModal');
+  const content=document.getElementById('recipeModalContent');
+  modal.classList.add('on');
+  document.body.style.overflow='hidden';
+
+  // Parse steps (split by sentence or numbered list)
+  const steps=parseSteps(r.instructions);
+
+  // Build ingredient list with measures
+  const ingList=r.ings.map((ing,i)=>`
+    <div class="rm-ing-item">
+      <div class="rm-ing-dot"></div>
+      <span>${r.measures[i]?`<b>${r.measures[i]}</b> `:''}${ing}</span>
+    </div>`).join('');
+
+  const ytBtn=r.youtube?`<a href="${r.youtube}" target="_blank" class="rm-yt-btn">▶ Watch on YouTube</a>`:'';
+
+  content.innerHTML=`
+    ${r.img?`<img class="rm-img" src="${r.img}" alt="${r.name}" onerror="this.outerHTML='<div class=rm-img-fall>🍽️</div>'">`:`<div class="rm-img-fall">🍽️</div>`}
+    <div class="rm-body">
+      <div class="rm-head">
+        <h2 class="rm-title">${r.name}</h2>
+        <button class="rm-close" onclick="closeRecipeModal()">✕</button>
+      </div>
+      <div class="rm-meta">
+        <span class="badge b-time">⏱ ${r.time} min</span>
+        <span class="badge b-cal">🔥 ${r.cal} cal</span>
+        ${r.area?`<span class="badge b-med">📍 ${r.area}</span>`:''}
+        ${r.cat?`<span class="badge b-easy">🍽 ${r.cat}</span>`:''}
+      </div>
+      <div class="rm-tags">${r.diets.map(d=>`<span class="ctag d">${d}</span>`).join('')}</div>
+
+      <div class="rm-section-title">Nutrition (est.)</div>
+      <div class="rm-nutrition">
+        <div class="rm-nut-item"><div class="rm-nut-val">${r.cal}</div><div class="rm-nut-label">Calories</div></div>
+        <div class="rm-nut-item"><div class="rm-nut-val">${Math.round(r.cal*0.25/4)}g</div><div class="rm-nut-label">Protein</div></div>
+        <div class="rm-nut-item"><div class="rm-nut-val">${Math.round(r.cal*0.5/4)}g</div><div class="rm-nut-label">Carbs</div></div>
+        <div class="rm-nut-item"><div class="rm-nut-val">${Math.round(r.cal*0.25/9)}g</div><div class="rm-nut-label">Fat</div></div>
+      </div>
+
+      <div class="rm-section-title">Ingredients (${r.ings.length})</div>
+      <div class="rm-ingredients"><div class="rm-ing-grid">${ingList}</div></div>
+
+      <div class="rm-section-title">Instructions</div>
+      <div class="rm-steps">
+        ${steps.map((s,i)=>`<div class="rm-step"><div class="rm-step-num">${i+1}</div><div>${s}</div></div>`).join('')}
+      </div>
+      ${ytBtn}
+    </div>`;
+}
+
+function parseSteps(instructions){
+  if(!instructions) return['No instructions available.'];
+  // Try numbered list first (1. Step or 1) Step)
+  const numbered=instructions.match(/\d+[\.\)]\s+.+?(?=\d+[\.\)]|$)/gs);
+  if(numbered&&numbered.length>2) return numbered.map(s=>s.replace(/^\d+[\.\)]\s+/,'').trim()).filter(Boolean);
+  // Split by double newline or sentence
+  const byNewline=instructions.split(/\r?\n\r?\n/).map(s=>s.replace(/\r?\n/g,' ').trim()).filter(s=>s.length>10);
+  if(byNewline.length>2)return byNewline;
+  // Split by '. ' (sentence by sentence)
+  return instructions.replace(/\r?\n/g,' ').split(/\.\s+/).map(s=>s.trim()).filter(s=>s.length>10).map(s=>s.endsWith('.')?s:s+'.');
+}
+
+function closeRecipeModal(){
+  document.getElementById('recipeModal').classList.remove('on');
+  document.body.style.overflow='';
+}
+document.getElementById('recipeModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeRecipeModal();});
+
+// ─── MEAL PLANNER ────────────────────────────────
+const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function renderPlanner(){
+  const grid=document.getElementById('plannerGrid');
+  const condLabel=document.getElementById('plannerCondLabel');
+  const condition=userProfile?.disease||null;
+
+  condLabel.textContent=condition?`Filtered for: ${condition}`:'No health condition set — showing varied meals';
+  document.getElementById('plannerSub').textContent=
+    condition?`7-day plan with meals safe for ${condition}.`:'Set your health condition in Settings to get personalised plans.';
+
+  // Load or generate plan
+  try{
+    const saved=localStorage.getItem('mm_plan');
+    if(saved){ weeklyPlan=JSON.parse(saved); }
+  }catch(e){ weeklyPlan=null; }
+
+  if(!weeklyPlan||weeklyPlan.condition!==condition||!recipes.length){
+    if(!recipes.length){grid.innerHTML='<div class="planner-empty"><p>⏳</p><p>Loading recipes… come back in a moment.</p></div>';return;}
+    generatePlan(condition);
+  }
+  renderPlanGrid();
+}
+
+function generatePlan(condition){
+  let pool=[...recipes];
+  // Filter by condition if set
+  if(condition) pool=pool.filter(r=>r.diets.includes(condition));
+  if(pool.length<14) pool=[...recipes]; // fallback to all if not enough
+
+  // Pick 14 unique recipes (2 per day)
+  const shuffled=pool.sort(()=>Math.random()-.5);
+  const picks=shuffled.slice(0,14);
+  weeklyPlan={
+    condition,
+    days:DAYS.map((day,i)=>({
+      day,
+      lunch:picks[i*2]||picks[i%picks.length],
+      dinner:picks[i*2+1]||picks[(i+1)%picks.length]
+    }))
+  };
+  localStorage.setItem('mm_plan',JSON.stringify(weeklyPlan));
+}
+
+function renderPlanGrid(){
+  const grid=document.getElementById('plannerGrid');
+  if(!weeklyPlan){grid.innerHTML='<div class="planner-empty"><p>🍽️</p><p>No plan generated yet.</p></div>';return;}
+  const today=new Date().getDay();// 0=Sun,1=Mon...
+  const todayIdx=(today+6)%7;// convert to Mon=0
+  grid.innerHTML=weeklyPlan.days.map((d,i)=>`
+    <div class="day-card" style="${i===todayIdx?'border-color:var(--accent)':''}" >
+      <div class="day-header">
+        <span class="day-name">${i===todayIdx?'📍 ':''} ${d.day}</span>
+        <span class="day-date">${i===todayIdx?'Today':''}</span>
+      </div>
+      <div class="day-meals">
+        <div class="meal-slot">
+          <div class="meal-type">☀️ Lunch</div>
+          ${mealMini(d.lunch)}
+        </div>
+        <div class="meal-slot">
+          <div class="meal-type">🌙 Dinner</div>
+          ${mealMini(d.dinner)}
+        </div>
+      </div>
+    </div>`).join('');
+  // Add click handlers for mini meal cards
+  grid.querySelectorAll('.meal-card-mini').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.id;
+      const r=recipes.find(x=>x.id===id);
+      if(r)openRecipeModal(r);
+    });
+  });
+}
+
+function mealMini(r){
+  if(!r)return`<div class="meal-card-mini"><span>—</span></div>`;
+  return`<div class="meal-card-mini" data-id="${r.id}">
+    <div class="meal-mini-img">${r.img?`<img src="${r.img}" alt="${r.name}" loading="lazy">`:'🍽️'}</div>
+    <span class="meal-mini-name">${r.name}</span>
+    <span class="meal-mini-cal">${r.cal} cal</span>
+  </div>`;
+}
+
+document.getElementById('regenPlanBtn').addEventListener('click',()=>{
+  const condition=userProfile?.disease||null;
+  if(!recipes.length){toast('⏳ Recipes still loading…');return;}
+  generatePlan(condition);renderPlanGrid();toast('🔄 New plan generated!');
+});
+
+// ─── INGREDIENTS ─────────────────────────────────
+function addIng(v){v=v.trim().toLowerCase().replace(/,/g,'');if(!v||ings.includes(v))return;ings.push(v);refreshChips();renderAll();}
+function refreshChips(){
+  const w=document.getElementById('chips');w.innerHTML='';
+  ings.forEach(ing=>{
+    const isAl=ALLERGEN_FLAT.some(kw=>ing.includes(kw)||kw.includes(ing));
+    const c=document.createElement('span');c.className=`chip ${isAl?'bad':'safe'}`;
+    c.innerHTML=`${isAl?'⚠️':'✅'} ${ing} <button class="chip-x">×</button>`;
+    c.querySelector('.chip-x').addEventListener('click',e=>{e.stopPropagation();ings=ings.filter(i=>i!==ing);refreshChips();renderAll();});
+    w.appendChild(c);
+  });
+}
+document.getElementById('ingInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===','){e.preventDefault();const v=e.target.value.replace(',','').trim();if(v){addIng(v);e.target.value='';}}
+});
+
+// ─── CONDITION PILLS ────────────────────────────
+document.querySelectorAll('.cond-pill').forEach(p=>{
+  p.classList.toggle('on',diets.includes(p.dataset.d));
+  p.addEventListener('click',()=>{
+    const d=p.dataset.d;p.classList.toggle('on');
+    if(p.classList.contains('on')){if(!diets.includes(d))diets.push(d);}else{diets=diets.filter(x=>x!==d);}
+    syncDiet();renderAll();
+  });
+});
+function syncDiet(){
+  document.querySelectorAll('.diet-btn').forEach(b=>b.classList.toggle('on',diets.includes(b.dataset.d)));
+  document.querySelectorAll('.cond-pill').forEach(p=>p.classList.toggle('on',diets.includes(p.dataset.d)));
+}
+document.querySelectorAll('.diet-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const d=b.dataset.d;b.classList.toggle('on');
+    if(b.classList.contains('on')){if(!diets.includes(d))diets.push(d);}else{diets=diets.filter(x=>x!==d);}
+    syncDiet();renderAll();
+  });
+});
+
+// ─── ALLERGENS ───────────────────────────────────
+document.querySelectorAll('.al-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const al=b.dataset.al;b.classList.toggle('on');
+    if(b.classList.contains('on')){if(!blocked.includes(al))blocked.push(al);}else{blocked=blocked.filter(a=>a!==al);}
+    renderAll();
+  });
+});
+
+// ─── TIME SLIDER ─────────────────────────────────
+document.getElementById('timeSlider').addEventListener('input',e=>{
+  maxT=parseInt(e.target.value);document.getElementById('timeV').textContent=maxT+' min';renderAll();
+});
+
+// ─── MOOD ────────────────────────────────────────
+function applyMood(){
+  document.querySelectorAll('.mood-btn').forEach(b=>{b.classList.toggle('on',b.dataset.mood===mood);});
+  document.body.className=document.body.className.replace(/mood-\w+/g,'').trim();
+  document.body.classList.add('mood-'+mood);
+}
+document.querySelectorAll('.mood-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    mood=b.dataset.mood;localStorage.setItem('mm_mood',mood);applyMood();renderAll();
+  });
+});
+applyMood();
+
+// ─── FAVORITES ───────────────────────────────────
+function toggleFav(id,btn,r){
+  const idx=favs.indexOf(id);
+  if(idx===-1){favs.push(id);btn.textContent='❤️';btn.classList.add('fv');toast('❤️ Saved to favorites!');}
+  else{favs.splice(idx,1);btn.textContent='🤍';btn.classList.remove('fv');toast('🗑 Removed from favorites');}
+  localStorage.setItem('mm_favs',JSON.stringify(favs));updateFavBadge();
+}
+function updateFavBadge(){const b=document.getElementById('favBadge');b.textContent=favs.length;b.classList.toggle('on',favs.length>0);}
+function renderFavPanel(){
+  const body=document.getElementById('favBody');
+  const fr=recipes.filter(r=>favs.includes(r.id));
+  if(!fr.length){body.innerHTML='<div class="fav-empty">No saved recipes yet.<br>Tap ❤️ on any recipe to save it.<br><br>💡 On mobile, swipe <b>right</b> to save!</div>';return;}
+  body.innerHTML=fr.map(r=>`
+    <div class="fav-item" onclick="closePanel.click();openRecipeModal(recipes.find(x=>x.id==='${r.id}'))" style="cursor:pointer">
+      <div class="fav-thumb">${r.img?`<img src="${r.img}" alt="${r.name}" loading="lazy">`:'🍽️'}</div>
+      <div class="fav-info"><div class="fav-name">${r.name}</div><div class="fav-sub">${r.time}min · ${r.cal} cal · ${r.cat||''}</div></div>
+      <button class="fav-rm" data-id="${r.id}">✕</button>
+    </div>`).join('');
+  body.querySelectorAll('.fav-rm').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const id=btn.dataset.id;favs=favs.filter(f=>f!==id);
+      localStorage.setItem('mm_favs',JSON.stringify(favs));updateFavBadge();renderFavPanel();
+      const c=document.querySelector(`.recipe-card[data-id="${id}"]`);
+      if(c){const hb=c.querySelector('.heart-btn');if(hb){hb.textContent='🤍';hb.classList.remove('fv');}}
+    });
+  });
+}
+document.getElementById('favBtn').addEventListener('click',()=>{document.getElementById('favPanel').classList.add('on');document.getElementById('backdrop').classList.add('on');renderFavPanel();});
+const closePanel=document.getElementById('closePanel');
+['closePanel','backdrop'].forEach(id=>{document.getElementById(id).addEventListener('click',()=>{document.getElementById('favPanel').classList.remove('on');document.getElementById('backdrop').classList.remove('on');});});
+
+// ─── SURPRISE ME ────────────────────────────────
+document.getElementById('surpriseBtn').addEventListener('click',()=>{
+  if(!visIds.length){toast('No recipes to pick — try clearing some filters!');return;}
+  const id=visIds[Math.floor(Math.random()*visIds.length)];
+  const card=document.querySelector(`.recipe-card[data-id="${id}"]`);
+  if(card){
+    document.querySelectorAll('.recipe-card').forEach(c=>c.classList.remove('spot'));
+    card.classList.add('spot');card.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(()=>card.classList.remove('spot'),3500);
+  }
+  const btn=document.getElementById('surpriseBtn');btn.classList.remove('shk');void btn.offsetWidth;btn.classList.add('shk');
+  setTimeout(()=>btn.classList.remove('shk'),500);
+  fireConfetti();toast('🎲 Random recipe picked!');
+});
+
+function fireConfetti(){
+  const cols=['#00e5a0','#4cc9f0','#c084fc','#fb923c','#ffd166','#ff6b6b','#fff'];
+  for(let i=0;i<90;i++){
+    const el=document.createElement('div');el.className='cf';
+    el.style.cssText=`left:${Math.random()*100}vw;top:-20px;width:${6+Math.random()*8}px;height:${6+Math.random()*10}px;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.4+Math.random()*.8}s;animation-delay:${Math.random()*.6}s;`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),3000);
+  }
+}
+
+// ─── VOICE ───────────────────────────────────────
+let recognition=null,recOn=false;
+document.getElementById('micBtn').addEventListener('click',()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('🎤 Voice input not supported in this browser');return;}
+  if(recOn){recognition&&recognition.stop();return;}
+  recognition=new SR();recognition.continuous=false;recognition.interimResults=false;recognition.lang='en-US';
+  recognition.onstart=()=>{recOn=true;document.getElementById('micBtn').classList.add('rec');document.getElementById('micLabel').textContent='Stop';toast('🎤 Listening… say "add chicken" or "remove rice"',60000);};
+  recognition.onresult=e=>{
+    const txt=e.results[0][0].transcript.toLowerCase().trim();
+    document.getElementById('toast').classList.remove('on');
+    if(txt.startsWith('add ')){const i=txt.slice(4).trim();addIng(i);toast(`✅ Added "${i}"`);}
+    else if(txt.startsWith('remove ')){const i=txt.slice(7).trim();ings=ings.filter(x=>x!==i);refreshChips();renderAll();toast(`🗑 Removed "${i}"`);}
+    else{addIng(txt);toast(`✅ Added "${txt}"`);}
+  };
+  recognition.onend=()=>{recOn=false;document.getElementById('micBtn').classList.remove('rec');document.getElementById('micLabel').textContent='Voice';document.getElementById('toast').classList.remove('on');};
+  recognition.onerror=()=>{recOn=false;document.getElementById('micBtn').classList.remove('rec');document.getElementById('micLabel').textContent='Voice';toast('🎤 Could not hear — try again');};
+  recognition.start();
+});
+
+// ─── SWIPE ───────────────────────────────────────
+function initSwipe(card,r){
+  let sx=0,dragging=false;
+  card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;dragging=false;},{passive:true});
+  card.addEventListener('touchmove',e=>{
+    const dx=e.touches[0].clientX-sx;
+    if(Math.abs(dx)>12){dragging=true;card.style.transform=`translateX(${dx*.25}px)`;
+      const sf=document.getElementById(`sf-${r.id}`),sh=document.getElementById(`sh-${r.id}`);
+      if(sf)sf.style.opacity=dx>0?Math.min(dx/90,.9):0;if(sh)sh.style.opacity=dx<0?Math.min(-dx/90,.9):0;}
+  },{passive:true});
+  card.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx;card.style.transform='';
+    const sf=document.getElementById(`sf-${r.id}`),sh=document.getElementById(`sh-${r.id}`);
+    if(sf)sf.style.opacity=0;if(sh)sh.style.opacity=0;
+    if(!dragging||Math.abs(dx)<60)return;
+    if(dx>60){if(!favs.includes(r.id))favs.push(r.id);localStorage.setItem('mm_favs',JSON.stringify(favs));updateFavBadge();lastSwipe={type:'fav',id:r.id};toast('❤️ Swiped right — saved!');}
+    else{hidden.push(r.id);localStorage.setItem('mm_hid',JSON.stringify(hidden));lastSwipe={type:'hide',id:r.id};toast('👋 Recipe hidden');renderAll();}
+    document.getElementById('undoBtn').classList.add('on');
+  },{passive:true});
+}
+document.getElementById('undoBtn').addEventListener('click',()=>{
+  if(!lastSwipe)return;
+  if(lastSwipe.type==='hide'){hidden=hidden.filter(h=>h!==lastSwipe.id);localStorage.setItem('mm_hid',JSON.stringify(hidden));}
+  else{favs=favs.filter(f=>f!==lastSwipe.id);localStorage.setItem('mm_favs',JSON.stringify(favs));updateFavBadge();}
+  lastSwipe=null;document.getElementById('undoBtn').classList.remove('on');renderAll();toast('↩ Undone!');
+});
+
+// ─── MONSTER ANIM ────────────────────────────────
+let mei=0;setInterval(()=>{if(document.getElementById('monster').classList.contains('on')){mei=(mei+1)%EMOJIS.length;document.getElementById('monsterEm').textContent=EMOJIS[mei];}},2200);
+
+// ─── DEMO FALLBACK ───────────────────────────────
+function getDemo(){return[
+  {id:'d1',name:'Berry Oat Bowl',img:'',cat:'Breakfast',area:'British',ings:['oats','blueberries','almond milk','chia seeds'],measures:['1 cup','½ cup','1 cup','1 tbsp'],instructions:'1. Cook oats with almond milk. 2. Top with blueberries and chia seeds. 3. Serve warm.',youtube:'',diets:['Vegan','Gluten Free','Dairy Free','Low-Salt'],tags:['quick'],time:10,cal:280,budget:2},
+  {id:'d2',name:'Zucchini Bolognese',img:'',cat:'Pasta',area:'Italian',ings:['zucchini','turkey','tomato','garlic','olive oil'],measures:['2','200g','2','3 cloves','2 tbsp'],instructions:'1. Spiralise zucchini. 2. Brown turkey in oil with garlic. 3. Add tomatoes and simmer 15 min. 4. Serve over zucchini noodles.',youtube:'',diets:['Gluten Free','Dairy Free','High-Protein','Low-Salt'],tags:['dinner'],time:25,cal:320,budget:3},
+  {id:'d3',name:'Lentil Spinach Soup',img:'',cat:'Vegetarian',area:'Indian',ings:['lentils','spinach','carrot','cumin','turmeric'],measures:['1 cup','2 cups','2','1 tsp','1 tsp'],instructions:'1. Boil lentils with carrot and spices. 2. Add spinach in final 5 minutes. 3. Season and serve.',youtube:'',diets:['Vegan','Gluten Free','Dairy Free','Vegetarian','Low-Salt'],tags:['soup'],time:35,cal:210,budget:1},
+  {id:'d4',name:'Grilled Salmon',img:'',cat:'Seafood',area:'British',ings:['salmon','asparagus','lemon','olive oil','dill'],measures:['200g','100g','1','1 tbsp','1 tsp'],instructions:'1. Marinate salmon in lemon, oil and dill. 2. Grill 4 min each side. 3. Serve with asparagus.',youtube:'',diets:['Gluten Free','Dairy Free','High-Protein','Low-Salt'],tags:['dinner'],time:20,cal:380,budget:5},
+  {id:'d5',name:'Chickpea Avocado Wrap',img:'',cat:'Vegetarian',area:'Mexican',ings:['chickpeas','avocado','tortilla','lettuce','lime'],measures:['1 can','1','2','handful','1'],instructions:'1. Mash chickpeas with lime. 2. Spread on tortilla. 3. Add avocado slices and lettuce. 4. Wrap and serve.',youtube:'',diets:['Vegan','Vegetarian'],tags:['lunch'],time:10,cal:340,budget:2},
+  {id:'d6',name:'Sweet Potato Bowl',img:'',cat:'Vegetarian',area:'American',ings:['sweet potato','black beans','brown rice','salsa','lime'],measures:['1 large','1 can','1 cup','3 tbsp','1'],instructions:'1. Roast sweet potato cubes 25 min at 200°C. 2. Cook rice. 3. Assemble bowl with beans and salsa.',youtube:'',diets:['Vegan','Gluten Free','Dairy Free','Vegetarian','Low-Salt'],tags:['bowl'],time:30,cal:290,budget:2},
+  {id:'d7',name:'Cauliflower Fried Rice',img:'',cat:'Vegetarian',area:'Chinese',ings:['cauliflower','peas','carrot','ginger','garlic'],measures:['1 head','1 cup','2','1 inch','3 cloves'],instructions:'1. Grate cauliflower into rice-sized pieces. 2. Stir fry with vegetables and ginger for 8 min. 3. Season and serve.',youtube:'',diets:['Vegan','Gluten Free','Dairy Free','Low-Salt','Vegetarian'],tags:['low-carb'],time:20,cal:220,budget:2},
+  {id:'d8',name:'Grilled Chicken Broccoli',img:'',cat:'Chicken',area:'American',ings:['chicken breast','broccoli','garlic','olive oil','lemon'],measures:['200g','200g','3 cloves','2 tbsp','1'],instructions:'1. Marinate chicken in lemon and oil. 2. Grill 6 min each side. 3. Steam broccoli. 4. Serve together.',youtube:'',diets:['Gluten Free','Dairy Free','High-Protein','Low-Salt'],tags:['meal-prep'],time:25,cal:310,budget:3},
+];}
+
+// ─── INIT ────────────────────────────────────────
+updateFavBadge();
+initAuth();
+</script>
+</body>
+</html>
